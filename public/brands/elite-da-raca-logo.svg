@@ -1,0 +1,16 @@
+<svg width="820" height="300" viewBox="0 0 820 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g opacity="0.95">
+    <path d="M92 141L182 52H332L410 14L488 52H638L728 141L638 230H488L410 286L332 230H182L92 141Z" stroke="#B8AEA4" stroke-width="7"/>
+    <path d="M218 78L367 224" stroke="#B8AEA4" stroke-width="16" stroke-linecap="square"/>
+    <path d="M262 78L389 203" stroke="#B8AEA4" stroke-width="16" stroke-linecap="square" opacity="0.82"/>
+    <path d="M307 78L409 182" stroke="#B8AEA4" stroke-width="16" stroke-linecap="square" opacity="0.66"/>
+    <path d="M602 78L453 224" stroke="#B8AEA4" stroke-width="16" stroke-linecap="square"/>
+    <path d="M558 78L431 203" stroke="#B8AEA4" stroke-width="16" stroke-linecap="square" opacity="0.82"/>
+    <path d="M513 78L411 182" stroke="#B8AEA4" stroke-width="16" stroke-linecap="square" opacity="0.66"/>
+    <path d="M410 110L439 138L410 166L381 138L410 110Z" fill="#B8AEA4"/>
+    <path d="M410 138L431 158L410 178L389 158L410 138Z" fill="#B8AEA4" opacity="0.78"/>
+    <path d="M410 166L422 178L410 190L398 178L410 166Z" fill="#B8AEA4" opacity="0.58"/>
+  </g>
+  <text x="410" y="230" text-anchor="middle" fill="#D8D0C8" font-size="70" font-family="Georgia, 'Times New Roman', serif" letter-spacing="7">ELITE</text>
+  <text x="410" y="270" text-anchor="middle" fill="#C4B8AA" font-size="30" font-family="Georgia, 'Times New Roman', serif" letter-spacing="12">DA RACA</text>
+</svg>

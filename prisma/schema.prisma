@@ -1,0 +1,223 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userGroups UserGroup[]
+}
+
+model UserGroup {
+  id      String @id @default(uuid())
+  userId  String
+  groupId String
+
+  user  User  @relation(fields: [userId], references: [id])
+  group Group @relation(fields: [groupId], references: [id])
+}
+
+model Group {
+  id         String   @id @default(uuid())
+  name       String   @unique
+  identifier String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  groupRoles GroupRole[]
+  userGroups UserGroup[]
+}
+
+model GroupRole {
+  id      String @id @default(uuid())
+  groupId String
+  roleId  String
+
+  group Group @relation(fields: [groupId], references: [id])
+  role  Role  @relation(fields: [roleId], references: [id])
+}
+
+model Permission {
+  id  String @id @default(uuid())
+  key String @unique
+
+  rolePermissions RolePermission[]
+}
+
+model Role {
+  id   String @id @default(uuid())
+  name String @unique
+
+  rolePermissions RolePermission[]
+  groupRoles      GroupRole[]
+}
+
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+}
+
+model AdminClass {
+  id                String   @id @default(uuid())
+  identifier        String   @unique
+  label             String
+  description       String
+  readPermissions   String[]
+  createPermissions String[]
+  updatePermissions String[]
+  deletePermissions String[]
+  allowCreate       Boolean  @default(true)
+  allowDelete       Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model AnimalType {
+  id   String @id @default(uuid())
+  name String
+
+  animals         Animal[]
+  characteristics AnimalTypeCharacteristic[]
+}
+
+model Animal {
+  id           String       @id @default(uuid())
+  identifier   String       @unique
+  name         String
+  description  String?
+  availability Availability @default(available)
+
+  animalTypeId String
+  animalType   AnimalType @relation(fields: [animalTypeId], references: [id])
+
+  characteristicValues AnimalCharacteristicValue[]
+  media                AnimalMedia[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AnimalMedia {
+  id            String         @id @default(uuid())
+  animalId      String
+  animal        Animal         @relation(fields: [animalId], references: [id])
+  kind          MediaKind
+  storageKey    String
+  fileName      String
+  contentType   String
+  bucket        String
+  createdAt     DateTime       @default(now())
+  carouselEntry CarouselEntry?
+
+  @@index([animalId, createdAt])
+}
+
+model Characteristic {
+  id           String                 @id @default(uuid())
+  key          String                 @unique
+  label        String
+  dataType     CharacteristicDataType @default(text)
+  isFilterable Boolean                @default(false)
+
+  animalTypes AnimalTypeCharacteristic[]
+  options     CharacteristicOption[]
+  values      AnimalCharacteristicValue[]
+}
+
+model CarouselEntry {
+  id            String   @id @default(uuid())
+  animalMediaId String   @unique
+  description   String?
+  displayOrder  Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  animalMedia AnimalMedia @relation(fields: [animalMediaId], references: [id], onDelete: Cascade)
+
+  @@index([displayOrder, createdAt])
+}
+
+model AnimalTypeCharacteristic {
+  id String @id @default(uuid())
+
+  animalTypeId     String
+  characteristicId String
+
+  animalType     AnimalType     @relation(fields: [animalTypeId], references: [id])
+  characteristic Characteristic @relation(fields: [characteristicId], references: [id])
+
+  dataType     CharacteristicDataType
+  required     Boolean                @default(false)
+  showInCard   Boolean                @default(false)
+  displayOrder Int                    @default(0)
+
+  @@unique([animalTypeId, characteristicId])
+}
+
+model CharacteristicOption {
+  id               String         @id @default(uuid())
+  characteristicId String
+  characteristic   Characteristic @relation(fields: [characteristicId], references: [id])
+
+  value                      String
+  label                      String
+  displayOrder               Int                         @default(0)
+  animalCharacteristicValues AnimalCharacteristicValue[]
+}
+
+model AnimalCharacteristicValue {
+  id String @id @default(uuid())
+
+  animalId         String
+  characteristicId String
+
+  animal         Animal         @relation(fields: [animalId], references: [id])
+  characteristic Characteristic @relation(fields: [characteristicId], references: [id])
+
+  valueText    String?
+  valueNumber  Float?
+  valueDate    DateTime?
+  valueBoolean Boolean?
+  optionId     String?
+  option       CharacteristicOption? @relation(fields: [optionId], references: [id])
+
+  @@unique([animalId, characteristicId])
+}
+
+enum Availability {
+  available
+  unavailable
+}
+
+enum CharacteristicDataType {
+  text
+  number
+  date
+  boolean
+  select
+}
+
+enum MediaKind {
+  image
+  video
+}
