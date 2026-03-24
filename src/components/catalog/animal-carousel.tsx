@@ -9,6 +9,7 @@ import type { AnimalCarouselProps } from "@/src/types";
 
 export function AnimalCarousel({ items, className, showThumbnails = false }: AnimalCarouselProps) {
   const [api, setApi] = useState<CarouselApi>();
+  const [thumbnailApi, setThumbnailApi] = useState<CarouselApi>();
   const [currentIndex, setCurrentIndex] = useState(0);
   const activeItem = items[currentIndex] ?? items[0];
 
@@ -31,16 +32,24 @@ export function AnimalCarousel({ items, className, showThumbnails = false }: Ani
     };
   }, [api]);
 
+  useEffect(() => {
+    if (!thumbnailApi || !items.length) {
+      return;
+    }
+
+    thumbnailApi.scrollTo(currentIndex);
+  }, [currentIndex, items.length, thumbnailApi]);
+
   if (!activeItem) {
     return null;
   }
 
   return (
-    <div className={`space-y-4 ${className ?? ""}`}>
+    <div className={`min-w-0 w-full space-y-4 ${className ?? ""}`}>
       <Carousel
         setApi={setApi}
         opts={{ align: "start", loop: items.length > 1 }}
-        className="overflow-hidden rounded-[2rem] border border-white/8 bg-[#1d1a16] shadow-[0_28px_70px_-35px_rgba(24,24,27,0.75)]"
+        className="w-full overflow-hidden rounded-[2rem] border border-white/8 bg-[#1d1a16] shadow-[0_28px_70px_-35px_rgba(24,24,27,0.75)]"
       >
         <CarouselContent className="ml-0">
           {items.map((item) => (
@@ -84,7 +93,7 @@ export function AnimalCarousel({ items, className, showThumbnails = false }: Ani
       </Carousel>
 
       {items.length > 1 && !showThumbnails ? (
-        <div className="flex items-center justify-center gap-2 md:hidden">
+        <div className="flex w-full flex-wrap items-center justify-center gap-2 md:hidden">
           {items.map((item, index) => {
             const isActive = index === currentIndex;
 
@@ -105,34 +114,41 @@ export function AnimalCarousel({ items, className, showThumbnails = false }: Ani
       ) : null}
 
       {items.length > 1 && showThumbnails ? (
-        <div className="flex gap-3 overflow-x-auto pb-1">
-          {items.map((item, index) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`group relative overflow-hidden rounded-4xl border transition ${
-                index === currentIndex
-                  ? "border-[#b8aea4] bg-[#26211c] shadow-[0_16px_36px_-24px_rgba(24,24,27,0.7)]"
-                  : "border-white/10 bg-[#151311] hover:border-[#7f756a] hover:bg-[#26211c]"
-              }`}
-              onClick={() => api?.scrollTo(index)}
-              aria-label={`Visualizar arquivo ${index + 1}`}
-            >
-              <div className="aspect-video w-28 bg-[#16130f] sm:w-36">
-                {item.kind === "video" ? (
-                  <video src={item.url} muted playsInline preload="metadata" className="h-full w-full object-cover" />
-                ) : (
-                  <img src={item.url} alt={item.title ?? `Arquivo ${index + 1}`} className="h-full w-full object-cover" />
-                )}
-              </div>
-              <div
-                className={`absolute inset-x-0 bottom-0 h-1 transition ${
-                  index === currentIndex ? "bg-[#b8aea4]" : "bg-transparent group-hover:bg-[#b8aea4]/45"
-                }`}
-              />
-            </button>
-          ))}
-        </div>
+        <Carousel
+          setApi={setThumbnailApi}
+          opts={{ align: "start", containScroll: "trimSnaps" }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-3">
+            {items.map((item, index) => (
+              <CarouselItem key={item.id} className="basis-[8.25rem] pl-3 sm:basis-[9.5rem] lg:basis-[11rem]">
+                <button
+                  type="button"
+                  className={`group relative w-full overflow-hidden rounded-4xl border transition ${
+                    index === currentIndex
+                      ? "border-[#b8aea4] bg-[#26211c] shadow-[0_16px_36px_-24px_rgba(24,24,27,0.7)]"
+                      : "border-white/10 bg-[#151311] hover:border-[#7f756a] hover:bg-[#26211c]"
+                  }`}
+                  onClick={() => api?.scrollTo(index)}
+                  aria-label={`Visualizar arquivo ${index + 1}`}
+                >
+                  <div className="aspect-video w-full bg-[#16130f]">
+                    {item.kind === "video" ? (
+                      <video src={item.url} muted playsInline preload="metadata" className="h-full w-full object-cover" />
+                    ) : (
+                      <img src={item.url} alt={item.title ?? `Arquivo ${index + 1}`} className="h-full w-full object-cover" />
+                    )}
+                  </div>
+                  <div
+                    className={`absolute inset-x-0 bottom-0 h-1 transition ${
+                      index === currentIndex ? "bg-[#b8aea4]" : "bg-transparent group-hover:bg-[#b8aea4]/45"
+                    }`}
+                  />
+                </button>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
       ) : null}
     </div>
   );

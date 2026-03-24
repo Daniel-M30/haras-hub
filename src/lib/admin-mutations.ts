@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { Availability, CharacteristicDataType, MediaKind } from "@/src/generated/prisma/enums";
 import { Prisma } from "@/src/generated/prisma/client";
 import { parseDateInputValue } from "@/src/lib/date";
-import { normalizeIdentifier } from "@/src/lib/identifier";
+import { buildUniqueIdentifier, normalizeIdentifier } from "@/src/lib/identifier";
 import { prisma } from "@/src/lib/prisma";
 import { deleteStorageObjects } from "@/src/lib/storage";
 import type { AnimalCharacteristicAssignmentInput, AnimalCharacteristicMutationInput } from "@/src/types";
@@ -73,6 +73,37 @@ function getRequiredIdentifier(value: unknown, fallbackValue: unknown) {
   }
 
   return normalized;
+}
+
+async function resolveAnimalIdentifier(value: unknown, fallbackValue: unknown, currentAnimalId?: string) {
+  const normalized = getRequiredIdentifier(value, fallbackValue);
+  const existingAnimals = await prisma.animal.findMany({
+    where: {
+      id: currentAnimalId
+        ? {
+            not: currentAnimalId,
+          }
+        : undefined,
+      OR: [
+        {
+          identifier: normalized,
+        },
+        {
+          identifier: {
+            startsWith: `${normalized}-`,
+          },
+        },
+      ],
+    },
+    select: {
+      identifier: true,
+    },
+  });
+
+  return buildUniqueIdentifier(
+    normalized,
+    existingAnimals.map((item) => item.identifier),
+  );
 }
 
 function getAvailabilityValue(value: unknown) {
@@ -530,7 +561,7 @@ export async function createObjectByClass(classId: AdminClassId, payload: unknow
       }
       case "animals": {
         const animalTypeId = getRequiredString(body.animalTypeId, "o tipo do animal");
-        const identifier = getRequiredIdentifier(body.identifier, body.name);
+        const identifier = await resolveAnimalIdentifier(body.identifier, body.name);
         const characteristicMutations = await buildAnimalCharacteristicMutations(
           animalTypeId,
           body.characteristicValues,
@@ -865,7 +896,7 @@ export async function updateObjectByClass(
       }
       case "animals": {
         const animalTypeId = getRequiredString(body.animalTypeId, "o tipo do animal");
-        const identifier = getRequiredIdentifier(body.identifier, body.name);
+        const identifier = await resolveAnimalIdentifier(body.identifier, body.name, objectId);
         const characteristicMutations = await buildAnimalCharacteristicMutations(
           animalTypeId,
           body.characteristicValues,

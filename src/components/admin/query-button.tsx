@@ -5,8 +5,9 @@ import { useTransition } from "react";
 import { Button } from "@/src/components/ui/button";
 import { LoadingState } from "@/src/components/loading-state";
 import type { AdminQueryButtonProps } from "@/src/types";
+import { cn } from "@/src/lib/utils";
 
-export function AdminQueryButton({ label, loadingLabel, updates, clears, variant = "outline" }: AdminQueryButtonProps) {
+export function AdminQueryButton({ label, loadingLabel, updates, clears, className, variant = "outline" }: AdminQueryButtonProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -35,7 +36,7 @@ export function AdminQueryButton({ label, loadingLabel, updates, clears, variant
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className={cn("flex flex-col items-end gap-1", className)}>
       <Button type="button" variant={variant} disabled={isPending} onClick={handleClick}>
         {isPending ? "Carregando..." : label}
       </Button>

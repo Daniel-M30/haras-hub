@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import { Availability, CharacteristicDataType } from "@/src/generated/prisma/enums";
 import { apiDelete, apiPatch, apiPost } from "@/src/lib/api-client";
 import { adminPermissionScopeOptions, requiredPermissionScopes } from "@/src/lib/admin-types";
+import { buildUniqueIdentifier } from "@/src/lib/identifier";
 import type { AdminClassId, AdminDetailPanelProps, AdminFormState } from "@/src/types";
 import { AnimalMediaManager } from "./animal-media-manager";
 import { AdminDetailView } from "./detail-view";
@@ -165,6 +166,14 @@ function AdminObjectForm({ classId, formState, objectId }: { classId: AdminClass
   const [selectedCarouselMediaId, setSelectedCarouselMediaId] = useState(
     formState.classId === "carouselEntries" ? formState.values.animalMediaId : "",
   );
+  const [animalName, setAnimalName] = useState(formState.classId === "animals" ? formState.values.name : "");
+  const [animalIdentifier, setAnimalIdentifier] = useState(
+    formState.classId === "animals"
+      ? formState.mode === "create"
+        ? buildUniqueIdentifier(formState.values.name || formState.values.identifier, formState.existingIdentifiers)
+        : formState.values.identifier
+      : "",
+  );
   const [selectedCharacteristics, setSelectedCharacteristics] = useState(
     formState.classId === "animalTypes" ? Object.fromEntries(formState.characteristics.map((item) => [item.characteristicId, item.selected])) : {},
   );
@@ -173,6 +182,17 @@ function AdminObjectForm({ classId, formState, objectId }: { classId: AdminClass
     formState.classId === "animals" ? (formState.animalTypes.find((item) => item.value === selectedAnimalTypeId) ?? null) : null;
   const selectedCarouselMediaOptions =
     formState.classId === "carouselEntries" ? (formState.mediaOptionsByAnimalId[selectedCarouselAnimalId] ?? []) : [];
+  const isAnimalCreateMode = formState.classId === "animals" && formState.mode === "create";
+
+  function handleAnimalNameChange(nextValue: string) {
+    setAnimalName(nextValue);
+
+    if (formState.classId !== "animals" || !isAnimalCreateMode) {
+      return;
+    }
+
+    setAnimalIdentifier(buildUniqueIdentifier(nextValue, formState.existingIdentifiers));
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -408,11 +428,19 @@ function AdminObjectForm({ classId, formState, objectId }: { classId: AdminClass
           <>
             <Field>
               <FieldLabel htmlFor="admin-animal-identifier">Identificador</FieldLabel>
-              <Input id="admin-animal-identifier" name="identifier" required defaultValue={formState.values.identifier} placeholder="atlas-do-vale" />
+              <Input
+                id="admin-animal-identifier"
+                name="identifier"
+                required
+                value={animalIdentifier}
+                onChange={(event) => setAnimalIdentifier(event.target.value)}
+                placeholder="atlas-do-vale"
+                readOnly={isAnimalCreateMode}
+              />
             </Field>
             <Field>
               <FieldLabel htmlFor="admin-animal-name">Nome</FieldLabel>
-              <Input id="admin-animal-name" name="name" required defaultValue={formState.values.name} />
+              <Input id="admin-animal-name" name="name" required value={animalName} onChange={(event) => handleAnimalNameChange(event.target.value)} />
             </Field>
             <Field>
               <FieldLabel htmlFor="admin-animal-type">Tipo</FieldLabel>

@@ -39,7 +39,7 @@ export default async function Page({ searchParams }: AdminPageProps) {
 
   if (!selectedClassId) {
     return (
-      <div className="flex h-[100dvh] flex-col gap-4 overflow-hidden bg-[#0d0c0b] p-4 text-[#ece6dd]">
+      <div className="flex h-dvh flex-col gap-4 overflow-hidden bg-[#0d0c0b] p-4 text-[#ece6dd]">
         <div className="shrink-0 flex items-start justify-between gap-4 rounded-2xl border border-white/8 bg-[#151311] p-4 shadow-[0_24px_60px_-34px_rgba(0,0,0,0.82)]">
           <div>
             <h1 className="text-2xl font-bold">Admin</h1>
@@ -66,8 +66,7 @@ export default async function Page({ searchParams }: AdminPageProps) {
   const objects = await getObjectsByClass(selectedClass.identifier);
   const selectedObjectId = objects.some((item) => item.identifier === requestedObjectId) ? requestedObjectId : undefined;
   const detail = selectedObjectId ? await getDetailByClass(selectedClass.identifier, selectedObjectId) : null;
-  const animalMedia =
-    selectedClass.identifier === "animals" && selectedObjectId ? await getAnimalMediaByAnimalId(selectedObjectId) : [];
+  const animalMedia = selectedClass.identifier === "animals" && selectedObjectId ? await getAnimalMediaByAnimalId(selectedObjectId) : [];
   const canUseCreateMode = requestedMode === "create" && capabilities.canCreate;
   const canUseEditMode = requestedMode === "edit" && capabilities.canUpdate && Boolean(selectedObjectId);
   const formState = canUseCreateMode
@@ -78,6 +77,17 @@ export default async function Page({ searchParams }: AdminPageProps) {
   const showClassesOnMobile = !hasRequestedClass;
   const showObjectsOnMobile = hasRequestedClass && !selectedObjectId && !formState;
   const showDetailsOnMobile = hasRequestedClass && (Boolean(selectedObjectId) || Boolean(formState));
+  const mobileBackAction = showObjectsOnMobile ? (
+    <AdminQueryButton
+      label="Voltar"
+      loadingLabel="Carregando classes..."
+      clears={["classId", "objectId", "mode"]}
+      variant="outline"
+      className="items-start"
+    />
+  ) : showDetailsOnMobile ? (
+    <AdminQueryButton label="Voltar" loadingLabel="Carregando objetos..." clears={["objectId", "mode"]} variant="outline" className="items-start" />
+  ) : null;
   const classesSection = (
     <CustomSection
       label="CLASSES"
@@ -122,54 +132,27 @@ export default async function Page({ searchParams }: AdminPageProps) {
   );
 
   return (
-    <div className="flex h-[100dvh] flex-col gap-4 overflow-hidden bg-[#0d0c0b] p-4 text-[#ece6dd]">
+    <div className="flex h-dvh flex-col gap-4 overflow-hidden bg-[#0d0c0b] p-4 text-[#ece6dd]">
       <div className="shrink-0 flex flex-col gap-4 rounded-2xl border border-white/8 bg-[#151311] p-4 shadow-[0_24px_60px_-34px_rgba(0,0,0,0.82)] sm:flex-row sm:items-start sm:justify-between">
-        <div>
+        <div className="hidden lg:block">
           <h1 className="text-2xl font-bold">Admin</h1>
           <p className="text-sm text-[#b9afa2]">Classes e acoes sao exibidas conforme as permissoes do usuario autenticado.</p>
         </div>
-        <LogoutButton />
+        <div className="flex items-start justify-between gap-2 lg:hidden">
+          {mobileBackAction}
+          <LogoutButton />
+        </div>
+        <div className="hidden lg:block">
+          <LogoutButton />
+        </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col lg:hidden">
-        {showClassesOnMobile ? (
-          <div className="flex min-h-0 flex-1 flex-col gap-3">
-            <div className="shrink-0 rounded-2xl border border-white/8 bg-[#151311] p-4 shadow-[0_24px_60px_-34px_rgba(0,0,0,0.82)]">
-              <p className="text-sm font-semibold uppercase tracking-wide text-[#8f8579]">Etapa 1</p>
-              <h2 className="text-xl font-bold text-[#f3ede5]">Escolha uma classe</h2>
-              <p className="mt-1 text-sm text-[#b9afa2]">Selecione a area que deseja administrar.</p>
-            </div>
-            {classesSection}
-          </div>
-        ) : null}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:hidden">
+        {showClassesOnMobile ? <div className="flex min-h-0 flex-1 overflow-hidden">{classesSection}</div> : null}
 
-        {showObjectsOnMobile ? (
-          <div className="flex min-h-0 flex-1 flex-col gap-3">
-            <div className="shrink-0 flex flex-col gap-3 rounded-2xl border border-white/8 bg-[#151311] p-4 shadow-[0_24px_60px_-34px_rgba(0,0,0,0.82)] sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-[#8f8579]">Etapa 2</p>
-                <h2 className="text-xl font-bold text-[#f3ede5]">{selectedClass.label}</h2>
-                <p className="mt-1 text-sm text-[#b9afa2]">Escolha um objeto para abrir os detalhes.</p>
-              </div>
-              <AdminQueryButton label="Voltar" loadingLabel="Carregando classes..." clears={["classId", "objectId", "mode"]} variant="outline" />
-            </div>
-            {objectsSection}
-          </div>
-        ) : null}
+        {showObjectsOnMobile ? <div className="flex min-h-0 flex-1 overflow-hidden">{objectsSection}</div> : null}
 
-        {showDetailsOnMobile ? (
-          <div className="flex min-h-0 flex-1 flex-col gap-3">
-            <div className="shrink-0 flex flex-col gap-3 rounded-2xl border border-white/8 bg-[#151311] p-4 shadow-[0_24px_60px_-34px_rgba(0,0,0,0.82)] sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-[#8f8579]">Etapa 3</p>
-                <h2 className="text-xl font-bold text-[#f3ede5]">Detalhes de {selectedClass.label.toLowerCase()}</h2>
-                <p className="mt-1 text-sm text-[#b9afa2]">Visualize, edite ou cadastre um novo registro nesta classe.</p>
-              </div>
-              <AdminQueryButton label="Voltar" loadingLabel="Carregando objetos..." clears={["objectId", "mode"]} variant="outline" />
-            </div>
-            {detailsSection}
-          </div>
-        ) : null}
+        {showDetailsOnMobile ? <div className="flex min-h-0 flex-1 overflow-hidden">{detailsSection}</div> : null}
       </div>
 
       <div className="hidden min-h-0 flex-1 gap-4 lg:flex">

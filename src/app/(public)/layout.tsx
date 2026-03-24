@@ -7,8 +7,7 @@ import eliteLogo from "@/public/brands/elite-da-raca-logo.svg";
 const navigationItems = [
   { href: "/", label: "Inicio" },
   { href: "/#catalogo", label: "Catalogo" },
-  { href: "/#contato", label: "Contato" },
-] as const;
+];
 
 export default function Layout({
   children,
@@ -16,7 +15,7 @@ export default function Layout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="bg-[#0d0c0b] text-[#ece6dd]">
+    <div className="bg-[#0d0c0b] text-[#ece6dd] min-h-dvh flex flex-col">
       <header className="relative h-20">
         <div className="fixed inset-x-0 top-0 z-20 border-b border-white/8 bg-[#0f0e0d]/92 backdrop-blur-xl">
           <div className="mx-auto grid h-20 max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 md:px-8">

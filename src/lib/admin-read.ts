@@ -1334,7 +1334,7 @@ export async function getFormStateByClass(classId: AdminClassId, mode: "create" 
       };
     }
     case "animals": {
-      const [animalTypes, animal] = await Promise.all([
+      const [animalTypes, animal, animalIdentifiers] = await Promise.all([
         getAnimalTypeDefinitions(),
         mode === "edit" && objectId
           ? prisma.animal.findUnique({
@@ -1360,6 +1360,12 @@ export async function getFormStateByClass(classId: AdminClassId, mode: "create" 
               },
             })
           : Promise.resolve(null),
+        prisma.animal.findMany({
+          select: {
+            id: true,
+            identifier: true,
+          },
+        }),
       ]);
 
       const characteristicValues = buildEmptyAnimalCharacteristicValues(animalTypes);
@@ -1392,6 +1398,9 @@ export async function getFormStateByClass(classId: AdminClassId, mode: "create" 
           identifier: animal?.identifier ?? "",
           name: animal?.name ?? "",
         },
+        existingIdentifiers: animalIdentifiers
+          .filter((item) => item.id !== objectId)
+          .map((item) => item.identifier),
       };
     }
     case "carouselEntries": {

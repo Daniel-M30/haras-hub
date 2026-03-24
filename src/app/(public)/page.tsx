@@ -34,16 +34,12 @@ export default async function Home({ searchParams }: CatalogPageProps) {
   ]);
 
   return (
-    <div className="mx-auto w-full max-w-[1088px] space-y-10 px-4 py-6">
-      <section className="rounded-[2rem] border border-white/8 bg-[linear-gradient(135deg,#141210_0%,#23201d_46%,#3f3933_100%)] p-4 shadow-[0_30px_90px_-45px_rgba(0,0,0,0.85)] md:p-6">
-        {featuredAnimals.length ? (
+    <div className="mx-auto w-full max-w-272 space-y-10 px-4 py-6">
+      {featuredAnimals.length ? (
+        <section className="rounded-[2rem] border border-white/8 bg-[linear-gradient(135deg,#141210_0%,#23201d_46%,#3f3933_100%)] p-4 shadow-[0_30px_90px_-45px_rgba(0,0,0,0.85)] md:p-6">
           <AnimalCarousel items={featuredAnimals} />
-        ) : (
-          <div className="rounded-[2rem] border border-dashed border-white/14 bg-white/5 p-8 text-sm text-[#c5bcae]">
-            Nenhum destaque com midia disponivel no momento.
-          </div>
-        )}
-      </section>
+        </section>
+      ) : null}
 
       <section id="catalogo" className="space-y-6">
         <CatalogToolbar

@@ -48,7 +48,7 @@ export default async function Page({ params }: AnimalDetailPageProps) {
       </Breadcrumb>
 
       <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <AnimalCarousel items={carouselItems} showThumbnails />
           <div className="rounded-3xl border border-white/8 bg-[#151311] p-6 text-[#ece6dd] shadow-[0_20px_45px_-30px_rgba(0,0,0,0.72)]">
             <h2 className="text-xl font-semibold">Descricao</h2>
@@ -56,7 +56,7 @@ export default async function Page({ params }: AnimalDetailPageProps) {
           </div>
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className="min-w-0 flex flex-col gap-6">
           <div className="rounded-3xl border border-white/8 bg-[#151311] p-6 text-[#ece6dd] shadow-[0_20px_45px_-30px_rgba(0,0,0,0.72)]">
             <h1 className="py-1 text-4xl font-bold">{item.name}</h1>
             <p className="text-xs font-bold tracking-[0.16em] text-[#8f8579]">Identificador: {item.identifier}</p>

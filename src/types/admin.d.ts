@@ -174,6 +174,7 @@ type AnimalAdminFormState = {
   };
   animalTypes: AdminAnimalTypeFormOption[];
   characteristicValues: Record<string, AdminAnimalCharacteristicValueState>;
+  existingIdentifiers: string[];
 };
 
 type CarouselEntryAdminFormState = {

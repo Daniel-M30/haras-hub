@@ -1,9 +1,19 @@
 "use client";
 
-import { Check, ChevronDown, Filter, Search, X } from "lucide-react";
+import { Check, ChevronDown, Filter, Search } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { FormEvent, type UIEvent, useMemo, useState, useTransition } from "react";
 import { Button } from "@/src/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/src/components/ui/dialog";
 import { Input } from "@/src/components/ui/input";
 import { LoadingState } from "@/src/components/loading-state";
 import type {
@@ -554,6 +564,15 @@ export function CatalogToolbar({ filters, initialSearch, initialAnimalTypes, ini
     setIsModalOpen(false);
   }
 
+  function handleDialogOpenChange(nextOpen: boolean) {
+    if (nextOpen) {
+      openModal();
+      return;
+    }
+
+    closeModal();
+  }
+
   function navigate(nextSearch: string, nextAnimalTypeId: string, nextCharacteristicTokens: string[]) {
     const params = buildSearchParams({
       animalTypes: nextAnimalTypeId ? [nextAnimalTypeId] : [],
@@ -567,8 +586,7 @@ export function CatalogToolbar({ filters, initialSearch, initialAnimalTypes, ini
     });
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function applyFilters() {
     setIsModalOpen(false);
     navigate(
       search,
@@ -579,6 +597,11 @@ export function CatalogToolbar({ filters, initialSearch, initialAnimalTypes, ini
         selectFilters: draftSelectFilters,
       }),
     );
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    applyFilters();
   }
 
   function handleChangeNumber(characteristicId: string, key: "min" | "max", value: string) {
@@ -617,7 +640,7 @@ export function CatalogToolbar({ filters, initialSearch, initialAnimalTypes, ini
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Nome, descricao, tipo ou caracteristica"
+              placeholder="Garimpar"
               className="h-12 rounded-2xl border-white/10 bg-[#1f1a17] pl-10 text-[#ece6dd] placeholder:text-[#8f8579]"
             />
           </div>
@@ -625,23 +648,172 @@ export function CatalogToolbar({ filters, initialSearch, initialAnimalTypes, ini
             Buscar
           </button>
 
-          <div className="relative">
-            <Button
-              type="button"
-              variant={hasActiveFilters ? "default" : "outline"}
-              size="icon"
-              className="size-12 rounded-2xl"
-              aria-label="Abrir filtros"
-              onClick={openModal}
+          <Dialog open={isModalOpen} onOpenChange={handleDialogOpenChange}>
+            <div className="relative">
+              <DialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant={hasActiveFilters ? "default" : "outline"}
+                  size="icon"
+                  className="size-12 rounded-2xl"
+                  aria-label="Abrir filtros"
+                >
+                  <Filter />
+                </Button>
+              </DialogTrigger>
+              {hasActiveFilters ? (
+                <span className="absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-[#b8aea4] text-[10px] font-bold text-[#11100f]">
+                  {activeFilterCount}
+                </span>
+              ) : null}
+            </div>
+
+            <DialogContent
+              showCloseButton={false}
+              className="gap-0 overflow-hidden rounded-[2rem] border border-white/8 bg-[#151311] p-0 text-[#ece6dd] shadow-[0_30px_80px_-38px_rgba(0,0,0,0.9)] sm:left-[50%] sm:right-auto sm:bottom-auto sm:w-full sm:translate-x-[-50%] sm:translate-y-[-50%]"
             >
-              <Filter />
-            </Button>
-            {hasActiveFilters ? (
-              <span className="absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-[#b8aea4] text-[10px] font-bold text-[#11100f]">
-                {activeFilterCount}
-              </span>
-            ) : null}
-          </div>
+              <DialogHeader className="shrink-0 gap-0 border-b border-white/10 p-5 text-left">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <DialogTitle className="text-2xl font-bold text-[#f3ede5]">Filtros</DialogTitle>
+                    <DialogDescription className="mt-1 text-sm text-[#b9afa2]">
+                      Os filtros so entram em vigor quando voce clicar em aplicar.
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
+                <div className="space-y-3 rounded-2xl border border-white/8 bg-[#1b1714] p-4">
+                  <div>
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-[#8f8579]">Tipo de animal</h3>
+                    <p className="mt-1 text-sm text-[#b9afa2]">Escolha apenas um tipo por vez.</p>
+                  </div>
+                  <LazySingleSelect
+                    clearCount={dynamicFacetData.animalTypeClearCount}
+                    options={dynamicFacetData.animalTypes}
+                    placeholder="Selecionar tipo"
+                    selectedValue={draftAnimalTypeId}
+                    onSelect={setDraftAnimalTypeId}
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-[#8f8579]">Caracteristicas</h3>
+                  {filters.characteristics.length ? (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {filters.characteristics.map((filter) => (
+                        <div key={filter.characteristicId} className="space-y-3 rounded-2xl border border-white/8 bg-[#1b1714] p-4">
+                          <div>
+                            <p className="text-sm font-semibold text-[#f3ede5]">{filter.label}</p>
+                            <p className="mt-1 text-xs uppercase tracking-wide text-[#8f8579]">
+                              {filter.dataType === "select" ? "Selecao unica" : filter.dataType === "number" ? "Intervalo numerico" : "Booleano"}
+                            </p>
+                          </div>
+
+                          {filter.dataType === "select" ? (
+                            <LazySingleSelect
+                              clearCount={dynamicFacetData.selectClearCounts[filter.characteristicId]}
+                              options={dynamicFacetData.selectOptions[filter.characteristicId] ?? filter.options}
+                              placeholder="Selecionar opcao"
+                              selectedValue={draftSelectFilters[filter.characteristicId] ?? ""}
+                              onSelect={(value) =>
+                                setDraftSelectFilters((current) => ({
+                                  ...current,
+                                  [filter.characteristicId]: value,
+                                }))
+                              }
+                            />
+                          ) : null}
+
+                          {filter.dataType === "number" ? (
+                            <div className="space-y-3">
+                              <div className="grid gap-3 sm:grid-cols-2">
+                                <div className="space-y-1">
+                                  <label className="text-xs font-semibold uppercase tracking-wide text-[#8f8579]">Minimo</label>
+                                  <Input
+                                    type="number"
+                                    step="any"
+                                    value={draftNumberFilters[filter.characteristicId]?.min ?? ""}
+                                    onChange={(event) => handleChangeNumber(filter.characteristicId, "min", event.target.value)}
+                                    placeholder={String(dynamicFacetData.numberRanges[filter.characteristicId]?.minValue ?? filter.minValue)}
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-xs font-semibold uppercase tracking-wide text-[#8f8579]">Maximo</label>
+                                  <Input
+                                    type="number"
+                                    step="any"
+                                    value={draftNumberFilters[filter.characteristicId]?.max ?? ""}
+                                    onChange={(event) => handleChangeNumber(filter.characteristicId, "max", event.target.value)}
+                                    placeholder={String(dynamicFacetData.numberRanges[filter.characteristicId]?.maxValue ?? filter.maxValue)}
+                                  />
+                                </div>
+                              </div>
+                              {dynamicFacetData.numberRanges[filter.characteristicId]?.availableCount ? (
+                                <p className="text-xs text-[#b9afa2]">
+                                  Valores disponiveis entre {dynamicFacetData.numberRanges[filter.characteristicId]?.minValue ?? filter.minValue} e{" "}
+                                  {dynamicFacetData.numberRanges[filter.characteristicId]?.maxValue ?? filter.maxValue}.
+                                </p>
+                              ) : (
+                                <p className="text-xs text-[#b9afa2]">Nenhum valor numerico disponivel com os filtros atuais.</p>
+                              )}
+                            </div>
+                          ) : null}
+
+                          {filter.dataType === "boolean" ? (
+                            <div className="flex flex-wrap gap-2">
+                              <Button
+                                type="button"
+                                variant={draftBooleanFilters[filter.characteristicId] === "" ? "default" : "outline"}
+                                onClick={() => handleChangeBoolean(filter.characteristicId, "")}
+                              >
+                                Todos ({dynamicFacetData.booleanCounts[filter.characteristicId]?.allCount ?? filter.trueCount + filter.falseCount})
+                              </Button>
+                              <Button
+                                type="button"
+                                variant={draftBooleanFilters[filter.characteristicId] === "true" ? "default" : "outline"}
+                                onClick={() => handleChangeBoolean(filter.characteristicId, "true")}
+                              >
+                                Verdadeiro ({dynamicFacetData.booleanCounts[filter.characteristicId]?.trueCount ?? filter.trueCount})
+                              </Button>
+                              <Button
+                                type="button"
+                                variant={draftBooleanFilters[filter.characteristicId] === "false" ? "default" : "outline"}
+                                onClick={() => handleChangeBoolean(filter.characteristicId, "false")}
+                              >
+                                Falso ({dynamicFacetData.booleanCounts[filter.characteristicId]?.falseCount ?? filter.falseCount})
+                              </Button>
+                            </div>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-white/10 bg-[#1b1714] p-4 text-sm text-[#b9afa2]">
+                      Nenhuma caracteristica esta marcada como filtravel no momento.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <DialogFooter className="shrink-0 justify-between gap-3 border-t border-white/10 p-5 sm:flex-row sm:justify-between">
+                <Button type="button" variant="outline" onClick={handleClearFilters}>
+                  Limpar filtros
+                </Button>
+                <div className="flex flex-wrap gap-3">
+                  <DialogClose asChild>
+                    <Button type="button" variant="outline">
+                      Fechar
+                    </Button>
+                  </DialogClose>
+                  <Button type="button" onClick={applyFilters}>
+                    Aplicar filtros
+                  </Button>
+                </div>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {hasActiveSearch || hasActiveFilters || isPending ? (
@@ -656,149 +828,6 @@ export function CatalogToolbar({ filters, initialSearch, initialAnimalTypes, ini
           </div>
         ) : null}
       </div>
-
-      {isModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/65 p-4 md:items-center">
-          <button type="button" className="absolute inset-0" aria-label="Fechar filtros" onClick={closeModal} />
-          <div className="relative z-10 max-h-[85vh] w-full max-w-4xl overflow-hidden rounded-[2rem] border border-white/8 bg-[#151311] text-[#ece6dd] shadow-[0_30px_80px_-38px_rgba(0,0,0,0.9)]">
-            <div className="flex items-start justify-between gap-4 border-b border-white/10 p-5">
-              <div>
-                <h2 className="text-2xl font-bold text-[#f3ede5]">Filtros</h2>
-                <p className="mt-1 text-sm text-[#b9afa2]">Os filtros so entram em vigor quando voce clicar em aplicar.</p>
-              </div>
-              <Button type="button" variant="ghost" size="icon" onClick={closeModal} aria-label="Fechar modal">
-                <X />
-              </Button>
-            </div>
-
-            <div className="max-h-[calc(85vh-150px)] space-y-5 overflow-y-auto p-5">
-              <div className="space-y-3 rounded-2xl border border-white/8 bg-[#1b1714] p-4">
-                <div>
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-[#8f8579]">Tipo de animal</h3>
-                  <p className="mt-1 text-sm text-[#b9afa2]">Escolha apenas um tipo por vez.</p>
-                </div>
-                <LazySingleSelect
-                  clearCount={dynamicFacetData.animalTypeClearCount}
-                  options={dynamicFacetData.animalTypes}
-                  placeholder="Selecionar tipo"
-                  selectedValue={draftAnimalTypeId}
-                  onSelect={setDraftAnimalTypeId}
-                />
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-[#8f8579]">Caracteristicas</h3>
-                {filters.characteristics.length ? (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {filters.characteristics.map((filter) => (
-                      <div key={filter.characteristicId} className="space-y-3 rounded-2xl border border-white/8 bg-[#1b1714] p-4">
-                        <div>
-                          <p className="text-sm font-semibold text-[#f3ede5]">{filter.label}</p>
-                          <p className="mt-1 text-xs uppercase tracking-wide text-[#8f8579]">
-                            {filter.dataType === "select" ? "Selecao unica" : filter.dataType === "number" ? "Intervalo numerico" : "Booleano"}
-                          </p>
-                        </div>
-
-                        {filter.dataType === "select" ? (
-                          <LazySingleSelect
-                            clearCount={dynamicFacetData.selectClearCounts[filter.characteristicId]}
-                            options={dynamicFacetData.selectOptions[filter.characteristicId] ?? filter.options}
-                            placeholder="Selecionar opcao"
-                            selectedValue={draftSelectFilters[filter.characteristicId] ?? ""}
-                            onSelect={(value) =>
-                              setDraftSelectFilters((current) => ({
-                                ...current,
-                                [filter.characteristicId]: value,
-                              }))
-                            }
-                          />
-                        ) : null}
-
-                        {filter.dataType === "number" ? (
-                          <div className="space-y-3">
-                            <div className="grid gap-3 sm:grid-cols-2">
-                              <div className="space-y-1">
-                                <label className="text-xs font-semibold uppercase tracking-wide text-[#8f8579]">Minimo</label>
-                                <Input
-                                  type="number"
-                                  step="any"
-                                  value={draftNumberFilters[filter.characteristicId]?.min ?? ""}
-                                  onChange={(event) => handleChangeNumber(filter.characteristicId, "min", event.target.value)}
-                                  placeholder={String(dynamicFacetData.numberRanges[filter.characteristicId]?.minValue ?? filter.minValue)}
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-xs font-semibold uppercase tracking-wide text-[#8f8579]">Maximo</label>
-                                <Input
-                                  type="number"
-                                  step="any"
-                                  value={draftNumberFilters[filter.characteristicId]?.max ?? ""}
-                                  onChange={(event) => handleChangeNumber(filter.characteristicId, "max", event.target.value)}
-                                  placeholder={String(dynamicFacetData.numberRanges[filter.characteristicId]?.maxValue ?? filter.maxValue)}
-                                />
-                              </div>
-                            </div>
-                            {dynamicFacetData.numberRanges[filter.characteristicId]?.availableCount ? (
-                              <p className="text-xs text-[#b9afa2]">
-                                Valores disponiveis entre {dynamicFacetData.numberRanges[filter.characteristicId]?.minValue ?? filter.minValue} e{" "}
-                                {dynamicFacetData.numberRanges[filter.characteristicId]?.maxValue ?? filter.maxValue}.
-                              </p>
-                            ) : (
-                              <p className="text-xs text-[#b9afa2]">Nenhum valor numerico disponivel com os filtros atuais.</p>
-                            )}
-                          </div>
-                        ) : null}
-
-                        {filter.dataType === "boolean" ? (
-                          <div className="flex flex-wrap gap-2">
-                            <Button
-                              type="button"
-                              variant={draftBooleanFilters[filter.characteristicId] === "" ? "default" : "outline"}
-                              onClick={() => handleChangeBoolean(filter.characteristicId, "")}
-                            >
-                              Todos ({dynamicFacetData.booleanCounts[filter.characteristicId]?.allCount ?? filter.trueCount + filter.falseCount})
-                            </Button>
-                            <Button
-                              type="button"
-                              variant={draftBooleanFilters[filter.characteristicId] === "true" ? "default" : "outline"}
-                              onClick={() => handleChangeBoolean(filter.characteristicId, "true")}
-                            >
-                              Verdadeiro ({dynamicFacetData.booleanCounts[filter.characteristicId]?.trueCount ?? filter.trueCount})
-                            </Button>
-                            <Button
-                              type="button"
-                              variant={draftBooleanFilters[filter.characteristicId] === "false" ? "default" : "outline"}
-                              onClick={() => handleChangeBoolean(filter.characteristicId, "false")}
-                            >
-                              Falso ({dynamicFacetData.booleanCounts[filter.characteristicId]?.falseCount ?? filter.falseCount})
-                            </Button>
-                          </div>
-                        ) : null}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-white/10 bg-[#1b1714] p-4 text-sm text-[#b9afa2]">
-                    Nenhuma caracteristica esta marcada como filtravel no momento.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-wrap justify-between gap-3 border-t border-white/10 p-5">
-              <Button type="button" variant="outline" onClick={handleClearFilters}>
-                Limpar filtros
-              </Button>
-              <div className="flex flex-wrap gap-3">
-                <Button type="button" variant="outline" onClick={closeModal}>
-                  Fechar
-                </Button>
-                <Button type="submit">Aplicar filtros</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </form>
   );
 }

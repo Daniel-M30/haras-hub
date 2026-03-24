@@ -77,6 +77,7 @@ type AdminDetailViewProps = {
 type AdminQueryButtonProps = {
   label: string;
   loadingLabel: string;
+  className?: string;
   updates?: Record<string, string | undefined>;
   clears?: string[];
   variant?: "default" | "outline" | "destructive" | "secondary" | "ghost" | "link";
