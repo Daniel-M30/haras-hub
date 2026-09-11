@@ -1767,7 +1767,8 @@ export const CharacteristicScalarFieldEnum = {
   key: 'key',
   label: 'label',
   dataType: 'dataType',
-  isFilterable: 'isFilterable'
+  isFilterable: 'isFilterable',
+  isBirthDate: 'isBirthDate'
 } as const
 
 export type CharacteristicScalarFieldEnum = (typeof CharacteristicScalarFieldEnum)[keyof typeof CharacteristicScalarFieldEnum]
@@ -1889,16 +1890,16 @@ export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
 
 
 /**
- * Reference to a field of type 'Availability'
+ * Reference to a field of type 'Int'
  */
-export type EnumAvailabilityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Availability'>
+export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
     
 
 
 /**
- * Reference to a field of type 'Availability[]'
+ * Reference to a field of type 'Int[]'
  */
-export type ListEnumAvailabilityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Availability[]'>
+export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
 
@@ -1927,20 +1928,6 @@ export type EnumCharacteristicDataTypeFieldRefInput<$PrismaModel> = FieldRefInpu
  * Reference to a field of type 'CharacteristicDataType[]'
  */
 export type ListEnumCharacteristicDataTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CharacteristicDataType[]'>
-    
-
-
-/**
- * Reference to a field of type 'Int'
- */
-export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
-    
-
-
-/**
- * Reference to a field of type 'Int[]'
- */
-export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
 

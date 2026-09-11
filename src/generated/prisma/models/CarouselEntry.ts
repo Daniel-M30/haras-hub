@@ -410,14 +410,6 @@ export type CarouselEntryUncheckedUpdateOneWithoutAnimalMediaNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.CarouselEntryUpdateToOneWithWhereWithoutAnimalMediaInput, Prisma.CarouselEntryUpdateWithoutAnimalMediaInput>, Prisma.CarouselEntryUncheckedUpdateWithoutAnimalMediaInput>
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type CarouselEntryCreateWithoutAnimalMediaInput = {
   id?: string
   description?: string | null

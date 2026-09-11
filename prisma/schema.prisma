@@ -105,7 +105,7 @@ model Animal {
   identifier   String       @unique
   name         String
   description  String?
-  availability Availability @default(available)
+  availability Int          @default(100)
 
   animalTypeId String
   animalType   AnimalType @relation(fields: [animalTypeId], references: [id])
@@ -138,6 +138,7 @@ model Characteristic {
   label        String
   dataType     CharacteristicDataType @default(text)
   isFilterable Boolean                @default(false)
+  isBirthDate  Boolean                @default(false)
 
   animalTypes AnimalTypeCharacteristic[]
   options     CharacteristicOption[]
@@ -202,11 +203,6 @@ model AnimalCharacteristicValue {
   option       CharacteristicOption? @relation(fields: [optionId], references: [id])
 
   @@unique([animalId, characteristicId])
-}
-
-enum Availability {
-  available
-  unavailable
 }
 
 enum CharacteristicDataType {

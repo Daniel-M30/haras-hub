@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
-import { Availability, CharacteristicDataType, MediaKind } from "@/src/generated/prisma/enums";
+import { CharacteristicDataType, MediaKind } from "@/src/generated/prisma/enums";
 import { Prisma } from "@/src/generated/prisma/client";
+import { maxAnimalAvailability, minAnimalAvailability, parseAnimalAvailability } from "@/src/lib/animal-availability";
 import { parseDateInputValue } from "@/src/lib/date";
 import { buildUniqueIdentifier, normalizeIdentifier } from "@/src/lib/identifier";
 import { prisma } from "@/src/lib/prisma";
@@ -107,13 +108,53 @@ async function resolveAnimalIdentifier(value: unknown, fallbackValue: unknown, c
 }
 
 function getAvailabilityValue(value: unknown) {
-  return value === Availability.unavailable ? Availability.unavailable : Availability.available;
+  const parsedAvailability = parseAnimalAvailability(value);
+
+  if (parsedAvailability === null) {
+    throw new AdminMutationError(`Informe a disponibilidade com um numero inteiro entre ${minAnimalAvailability} e ${maxAnimalAvailability}.`);
+  }
+
+  return parsedAvailability;
 }
 
 function getDataTypeValue(value: unknown) {
   return Object.values(CharacteristicDataType).includes(value as CharacteristicDataType)
     ? (value as CharacteristicDataType)
     : CharacteristicDataType.text;
+}
+
+async function ensureUniqueBirthDateCharacteristic(currentCharacteristicId?: string) {
+  const existingCharacteristic = await prisma.characteristic.findFirst({
+    where: {
+      id: currentCharacteristicId
+        ? {
+            not: currentCharacteristicId,
+          }
+        : undefined,
+      isBirthDate: true,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (existingCharacteristic) {
+    throw new AdminMutationError("Ja existe uma caracteristica marcada como data de nascimento.");
+  }
+}
+
+async function getBirthDateValue(dataTypeValue: CharacteristicDataType, inputValue: unknown, currentCharacteristicId?: string) {
+  if (dataTypeValue !== CharacteristicDataType.date) {
+    return false;
+  }
+
+  const isBirthDate = getBooleanValue(inputValue);
+
+  if (isBirthDate) {
+    await ensureUniqueBirthDateCharacteristic(currentCharacteristicId);
+  }
+
+  return isBirthDate;
 }
 
 function getPositiveIntegerValue(value: unknown, label: string) {
@@ -514,9 +555,11 @@ export async function createObjectByClass(classId: AdminClassId, payload: unknow
       }
       case "characteristics": {
         const optionLabels = getOptionLabels(body.optionsText);
+        const dataType = getDataTypeValue(body.dataType);
         const characteristic = await prisma.characteristic.create({
           data: {
-            dataType: getDataTypeValue(body.dataType),
+            dataType,
+            isBirthDate: await getBirthDateValue(dataType, body.isBirthDate),
             isFilterable: getBooleanValue(body.isFilterable),
             key: getRequiredString(body.key, "a chave da caracteristica"),
             label: getRequiredString(body.label, "o rotulo da caracteristica"),
@@ -755,6 +798,7 @@ export async function updateObjectByClass(
       }
       case "characteristics": {
         const optionLabels = getOptionLabels(body.optionsText);
+        const dataType = getDataTypeValue(body.dataType);
 
         await prisma.$transaction(async transaction => {
           await transaction.characteristic.update({
@@ -762,7 +806,8 @@ export async function updateObjectByClass(
               id: objectId,
             },
             data: {
-              dataType: getDataTypeValue(body.dataType),
+              dataType,
+              isBirthDate: await getBirthDateValue(dataType, body.isBirthDate, objectId),
               isFilterable: getBooleanValue(body.isFilterable),
               key: getRequiredString(body.key, "a chave da caracteristica"),
               label: getRequiredString(body.label, "o rotulo da caracteristica"),
@@ -773,7 +818,7 @@ export async function updateObjectByClass(
               characteristicId: objectId,
             },
             data: {
-              dataType: getDataTypeValue(body.dataType),
+              dataType,
             },
           });
           await transaction.animalCharacteristicValue.deleteMany({

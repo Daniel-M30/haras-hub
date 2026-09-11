@@ -8,4 +8,32 @@ type MediaResponsePayload = {
   status: number;
 };
 
-export type { MediaResponsePayload };
+type AnimalMediaUploadSessionPayload = {
+  contentType: string;
+  fileName: string;
+  kind: "image" | "video";
+  sessionId: string;
+  storageKey: string;
+  totalChunks: number;
+};
+
+type RegisteredAnimalMediaUploadInput = {
+  contentType: string;
+  fileName: string;
+  sessionId: string;
+  storageKey: string;
+  totalChunks: number;
+};
+
+type AnimalMediaUploadChunkInput = {
+  chunkIndex: number;
+  sessionId: string;
+  storageKey: string;
+};
+
+export type {
+  AnimalMediaUploadChunkInput,
+  AnimalMediaUploadSessionPayload,
+  MediaResponsePayload,
+  RegisteredAnimalMediaUploadInput,
+};

@@ -2,8 +2,9 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { Availability, CharacteristicDataType } from "@/src/generated/prisma/enums";
+import { CharacteristicDataType } from "@/src/generated/prisma/enums";
 import { apiDelete, apiPatch, apiPost } from "@/src/lib/api-client";
+import { maxAnimalAvailability, minAnimalAvailability } from "@/src/lib/animal-availability";
 import { adminPermissionScopeOptions, requiredPermissionScopes } from "@/src/lib/admin-types";
 import { buildUniqueIdentifier } from "@/src/lib/identifier";
 import type { AdminClassId, AdminDetailPanelProps, AdminFormState } from "@/src/types";
@@ -51,6 +52,7 @@ function buildPayload(formData: FormData, formState: AdminFormState) {
     case "characteristics":
       return {
         dataType: formData.get("dataType")?.toString() ?? CharacteristicDataType.text,
+        isBirthDate: formData.get("isBirthDate") === "on",
         isFilterable: formData.get("isFilterable") === "on",
         key: formData.get("key")?.toString() ?? "",
         label: formData.get("label")?.toString() ?? "",
@@ -73,7 +75,7 @@ function buildPayload(formData: FormData, formState: AdminFormState) {
 
       return {
         animalTypeId,
-        availability: formData.get("availability")?.toString() ?? Availability.available,
+        availability: formData.get("availability")?.toString() ?? "100",
         characteristicValues: Object.fromEntries(
           (selectedAnimalType?.characteristics ?? []).map((characteristic) => [
             characteristic.characteristicId,
@@ -165,6 +167,9 @@ function AdminObjectForm({ classId, formState, objectId }: { classId: AdminClass
   const [selectedCarouselAnimalId, setSelectedCarouselAnimalId] = useState(formState.classId === "carouselEntries" ? formState.values.animalId : "");
   const [selectedCarouselMediaId, setSelectedCarouselMediaId] = useState(
     formState.classId === "carouselEntries" ? formState.values.animalMediaId : "",
+  );
+  const [selectedCharacteristicDataType, setSelectedCharacteristicDataType] = useState(
+    formState.classId === "characteristics" ? formState.values.dataType : CharacteristicDataType.text,
   );
   const [animalName, setAnimalName] = useState(formState.classId === "animals" ? formState.values.name : "");
   const [animalIdentifier, setAnimalIdentifier] = useState(
@@ -341,7 +346,9 @@ function AdminObjectForm({ classId, formState, objectId }: { classId: AdminClass
                               : item.dataType === CharacteristicDataType.number
                                 ? "Numero"
                                 : item.dataType === CharacteristicDataType.date
-                                  ? "Data"
+                                  ? item.isBirthDate
+                                    ? "Data (idade no site)"
+                                    : "Data"
                                   : item.dataType === CharacteristicDataType.boolean
                                     ? "Booleano"
                                     : "Selecao"}
@@ -396,7 +403,13 @@ function AdminObjectForm({ classId, formState, objectId }: { classId: AdminClass
             </Field>
             <Field>
               <FieldLabel htmlFor="admin-characteristic-data-type">Tipo de dado</FieldLabel>
-              <select id="admin-characteristic-data-type" name="dataType" defaultValue={formState.values.dataType} className={selectClassName}>
+              <select
+                id="admin-characteristic-data-type"
+                name="dataType"
+                defaultValue={formState.values.dataType}
+                className={selectClassName}
+                onChange={(event) => setSelectedCharacteristicDataType(event.target.value as CharacteristicDataType)}
+              >
                 <option value={CharacteristicDataType.text}>Texto</option>
                 <option value={CharacteristicDataType.number}>Numero</option>
                 <option value={CharacteristicDataType.date}>Data</option>
@@ -404,6 +417,15 @@ function AdminObjectForm({ classId, formState, objectId }: { classId: AdminClass
                 <option value={CharacteristicDataType.select}>Selecao</option>
               </select>
             </Field>
+            {selectedCharacteristicDataType === CharacteristicDataType.date ? (
+              <Field>
+                <FieldLabel>Data de nascimento</FieldLabel>
+                <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#1f1a17] px-3 py-2 text-sm text-[#ece6dd]">
+                  <input type="checkbox" name="isBirthDate" defaultChecked={formState.values.isBirthDate} />
+                  Essa data deve ser usada para calcular a idade publica do animal
+                </label>
+              </Field>
+            ) : null}
             <Field>
               <FieldLabel>Filtro publico</FieldLabel>
               <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#1f1a17] px-3 py-2 text-sm text-[#ece6dd]">
@@ -461,10 +483,18 @@ function AdminObjectForm({ classId, formState, objectId }: { classId: AdminClass
             </Field>
             <Field>
               <FieldLabel htmlFor="admin-animal-availability">Disponibilidade</FieldLabel>
-              <select id="admin-animal-availability" name="availability" defaultValue={formState.values.availability} className={selectClassName}>
-                <option value={Availability.available}>Disponivel</option>
-                <option value={Availability.unavailable}>Indisponivel</option>
-              </select>
+              <Input
+                id="admin-animal-availability"
+                name="availability"
+                type="number"
+                min={minAnimalAvailability}
+                max={maxAnimalAvailability}
+                step={1}
+                required
+                defaultValue={formState.values.availability}
+                placeholder="100"
+              />
+              <p className="mt-2 text-xs text-[#8f8579]">Informe um percentual entre {minAnimalAvailability} e {maxAnimalAvailability}.</p>
             </Field>
             <Field>
               <FieldLabel htmlFor="admin-animal-description">Descricao comercial</FieldLabel>
@@ -516,7 +546,12 @@ function AdminObjectForm({ classId, formState, objectId }: { classId: AdminClass
                         ) : null}
 
                         {characteristic.dataType === CharacteristicDataType.date ? (
-                          <Input name={`characteristic.${characteristic.characteristicId}.date`} type="date" defaultValue={value.date} />
+                          <div className="space-y-2">
+                            <Input name={`characteristic.${characteristic.characteristicId}.date`} type="date" defaultValue={value.date} />
+                            {characteristic.isBirthDate ? (
+                              <p className="text-xs text-[#8f8579]">Essa data sera usada para calcular a idade exibida no site.</p>
+                            ) : null}
+                          </div>
                         ) : null}
 
                         {characteristic.dataType === CharacteristicDataType.boolean ? (

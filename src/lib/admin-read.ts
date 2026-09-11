@@ -1,7 +1,8 @@
 import { cookies } from "next/headers";
-import { Availability, CharacteristicDataType, MediaKind } from "@/src/generated/prisma/enums";
+import { CharacteristicDataType, MediaKind } from "@/src/generated/prisma/enums";
+import { defaultAnimalAvailability, formatAnimalAvailability } from "@/src/lib/animal-availability";
 import { AUTH_TOKEN_COOKIE_NAME, verifyAuthToken } from "@/src/lib/auth";
-import { formatDateInputValue, formatDateOnly } from "@/src/lib/date";
+import { formatDateInputValue, formatDateOnly, formatDetailedAgeFromBirthDate } from "@/src/lib/date";
 import { prisma } from "@/src/lib/prisma";
 import { getPublicMediaUrl } from "@/src/lib/storage";
 import type { DetailView, ObjectsType } from "@/src/types";
@@ -21,8 +22,8 @@ function formatDateTime(value: Date) {
   return value.toLocaleString("pt-BR");
 }
 
-function formatAvailability(value: Availability) {
-  return value === Availability.available ? "Disponivel" : "Indisponivel";
+function formatAvailability(value: number) {
+  return formatAnimalAvailability(value);
 }
 
 function formatDataType(value: CharacteristicDataType) {
@@ -33,13 +34,22 @@ function formatPermissionScopes(scopes: string[]) {
   return scopes.join(", ");
 }
 
-function getCharacteristicDisplayValue(value: {
+function getCharacteristicDisplayValue(
+  characteristic: {
+    isBirthDate?: boolean;
+  },
+  value: {
   option: { label: string; value: string } | null;
   valueBoolean: boolean | null;
   valueDate: Date | null;
   valueNumber: number | null;
   valueText: string | null;
-}) {
+},
+) {
+  if (characteristic.isBirthDate && value.valueDate) {
+    return `${formatDateOnly(value.valueDate)} (${formatDetailedAgeFromBirthDate(value.valueDate)})`;
+  }
+
   if (value.option) {
     return value.option.label;
   }
@@ -100,12 +110,13 @@ async function getAnimalTypeDefinitions() {
           characteristicId: true,
           required: true,
           showInCard: true,
-          characteristic: {
-            select: {
-              dataType: true,
-              key: true,
-              label: true,
-              options: {
+              characteristic: {
+                select: {
+                  dataType: true,
+                  isBirthDate: true,
+                  key: true,
+                  label: true,
+                  options: {
                 orderBy: {
                   displayOrder: "asc",
                 },
@@ -124,12 +135,13 @@ async function getAnimalTypeDefinitions() {
   return animalTypes.map((animalType) => ({
     value: animalType.id,
     label: animalType.name,
-    characteristics: animalType.characteristics.map((item) => ({
-      characteristicId: item.characteristicId,
-      dataType: item.characteristic.dataType,
-      key: item.characteristic.key,
-      label: item.characteristic.label,
-      options: item.characteristic.options.map((option) => ({
+      characteristics: animalType.characteristics.map((item) => ({
+        characteristicId: item.characteristicId,
+        dataType: item.characteristic.dataType,
+        isBirthDate: item.characteristic.isBirthDate,
+        key: item.characteristic.key,
+        label: item.characteristic.label,
+        options: item.characteristic.options.map((option) => ({
         value: option.id,
         label: option.label,
       })),
@@ -391,6 +403,7 @@ export async function getObjectsByClass(classId: AdminClassId): Promise<ObjectsT
         select: {
           dataType: true,
           id: true,
+          isBirthDate: true,
           isFilterable: true,
           key: true,
           label: true,
@@ -405,7 +418,10 @@ export async function getObjectsByClass(classId: AdminClassId): Promise<ObjectsT
       return characteristics.map((characteristic) => ({
         identifier: characteristic.id,
         label: characteristic.label,
-        description: `${characteristic.key} - ${formatDataType(characteristic.dataType)} - ${characteristic.options.length} opcoes - filtro ${characteristic.isFilterable ? "ativo" : "inativo"}`,
+        description:
+          `${characteristic.key} - ${formatDataType(characteristic.dataType)}` +
+          `${characteristic.isBirthDate ? " - calcula idade" : ""}` +
+          ` - ${characteristic.options.length} opcoes - filtro ${characteristic.isFilterable ? "ativo" : "inativo"}`,
       }));
     }
     case "animalTypes": {
@@ -754,6 +770,7 @@ export async function getDetailByClass(classId: AdminClassId, objectId: string):
           },
           dataType: true,
           id: true,
+          isBirthDate: true,
           isFilterable: true,
           key: true,
           label: true,
@@ -786,6 +803,7 @@ export async function getDetailByClass(classId: AdminClassId, objectId: string):
               { label: "Chave", value: characteristic.key },
               { label: "Rotulo", value: characteristic.label },
               { label: "Tipo de dado", value: formatDataType(characteristic.dataType) },
+              { label: "Data de nascimento", value: characteristic.isBirthDate ? "Sim" : "Nao" },
               { label: "Filtro publico", value: characteristic.isFilterable ? "Habilitado" : "Desabilitado" },
               { label: "Valores em animais", value: characteristic.values.length.toString() },
             ],
@@ -828,6 +846,7 @@ export async function getDetailByClass(classId: AdminClassId, objectId: string):
               characteristic: {
                 select: {
                   dataType: true,
+                  isBirthDate: true,
                   isFilterable: true,
                   key: true,
                   label: true,
@@ -869,7 +888,10 @@ export async function getDetailByClass(classId: AdminClassId, objectId: string):
               .sort((left, right) => left.displayOrder - right.displayOrder)
               .map((item) => ({
                 badge: item.required ? "Obrigatorio" : item.showInCard ? "Destaque na listagem" : "Opcional",
-                description: `${item.characteristic.key} - ${formatDataType(item.characteristic.dataType)} - ordem ${item.displayOrder} - filtro ${item.characteristic.isFilterable ? "ativo" : "inativo"} - card ${item.showInCard ? "ativo" : "inativo"}`,
+                description:
+                  `${item.characteristic.key} - ${formatDataType(item.characteristic.dataType)}` +
+                  `${item.characteristic.isBirthDate ? " - calcula idade" : ""}` +
+                  ` - ordem ${item.displayOrder} - filtro ${item.characteristic.isFilterable ? "ativo" : "inativo"} - card ${item.showInCard ? "ativo" : "inativo"}`,
                 label: `${item.characteristic.label} (${item.characteristic.options.length} opcoes)`,
               })),
             title: "Caracteristicas",
@@ -900,6 +922,7 @@ export async function getDetailByClass(classId: AdminClassId, objectId: string):
             select: {
               characteristic: {
                 select: {
+                  isBirthDate: true,
                   label: true,
                 },
               },
@@ -956,7 +979,7 @@ export async function getDetailByClass(classId: AdminClassId, objectId: string):
             emptyMessage: "Nenhuma caracteristica preenchida.",
             items: animal.characteristicValues
               .map((item) => ({
-                description: getCharacteristicDisplayValue(item),
+                description: getCharacteristicDisplayValue(item.characteristic, item),
                 label: item.characteristic.label,
               }))
               .sort((left, right) => left.label.localeCompare(right.label, "pt-BR")),
@@ -1226,6 +1249,7 @@ export async function getFormStateByClass(classId: AdminClassId, mode: "create" 
               },
               select: {
                 dataType: true,
+                isBirthDate: true,
                 isFilterable: true,
                 key: true,
                 label: true,
@@ -1252,6 +1276,7 @@ export async function getFormStateByClass(classId: AdminClassId, mode: "create" 
         title: mode === "create" ? "Nova caracteristica" : "Editar caracteristica",
         values: {
           dataType: characteristic?.dataType ?? CharacteristicDataType.text,
+          isBirthDate: characteristic?.isBirthDate ?? false,
           isFilterable: characteristic?.isFilterable ?? false,
           key: characteristic?.key ?? "",
           label: characteristic?.label ?? "",
@@ -1268,6 +1293,7 @@ export async function getFormStateByClass(classId: AdminClassId, mode: "create" 
           select: {
             dataType: true,
             id: true,
+            isBirthDate: true,
             key: true,
             label: true,
             options: {
@@ -1292,6 +1318,7 @@ export async function getFormStateByClass(classId: AdminClassId, mode: "create" 
                     characteristic: {
                       select: {
                         dataType: true,
+                        isBirthDate: true,
                       },
                     },
                   },
@@ -1312,6 +1339,7 @@ export async function getFormStateByClass(classId: AdminClassId, mode: "create" 
             characteristicId: characteristic.id,
             dataType: current?.characteristic.dataType ?? characteristic.dataType,
             displayOrder: String(current?.displayOrder ?? index + 1),
+            isBirthDate: current?.characteristic.isBirthDate ?? characteristic.isBirthDate,
             key: characteristic.key,
             label: characteristic.label,
             optionCount: characteristic.options.length,
@@ -1393,7 +1421,7 @@ export async function getFormStateByClass(classId: AdminClassId, mode: "create" 
         title: mode === "create" ? "Novo animal" : "Editar animal",
         values: {
           animalTypeId: animal?.animalTypeId ?? animalTypes[0]?.value ?? "",
-          availability: animal?.availability ?? Availability.available,
+          availability: animal?.availability ?? defaultAnimalAvailability,
           description: animal?.description ?? "",
           identifier: animal?.identifier ?? "",
           name: animal?.name ?? "",

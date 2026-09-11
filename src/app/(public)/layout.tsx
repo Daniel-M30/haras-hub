@@ -46,8 +46,8 @@ export default function Layout({
       <main className="flex flex-1">{children}</main>
 
       <footer id="contato" className="flex flex-col items-center gap-2 border-t border-white/8 bg-[#131110] px-6 py-10 text-center text-[#b9afa2]">
-        <p className="text-sm font-medium text-[#f3ede5]">Haras Ltda. - CNPJ: 12.345.678/0000-01 - Rua teste, 132 - Ubaporanga, MG 12345-678</p>
-        <p className="text-sm">info@meusite.com - Tel: {getWhatsappDisplayPhone()}</p>
+        <p className="text-sm font-medium text-[#f3ede5]">Elite da Raça - CNPJ: 65.764.622/0001-31 - Ubaporanga, MG 35338-000</p>
+        <p className="text-sm">Tel: {getWhatsappDisplayPhone()}</p>
         <p className="text-xs uppercase tracking-[0.18em] text-[#81786d]">© 2026 Elite da Raca</p>
       </footer>
 

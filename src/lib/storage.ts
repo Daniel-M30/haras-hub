@@ -4,7 +4,8 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { DeleteObjectCommand, DeleteObjectsCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { MediaKind } from "@/src/generated/prisma/enums";
-import type { MediaResponsePayload } from "@/src/types";
+import { animalMediaUploadChunkSizeInBytes, maxAnimalMediaUploadSizeInBytes, maxAnimalMediaUploadSizeLabel } from "@/src/lib/media-upload";
+import type { AnimalMediaUploadSessionPayload, MediaResponsePayload } from "@/src/types";
 
 function getStorageBucket() {
   return process.env.AWS_S3_BUCKET ?? "";
@@ -99,6 +100,36 @@ function getMimeTypeFromFileName(fileName: string) {
     default:
       return "application/octet-stream";
   }
+}
+
+function resolveMediaUploadContentType(fileName: string, mimeType: string) {
+  const normalizedMimeType = mimeType.trim().toLowerCase();
+
+  if (normalizedMimeType) {
+    return normalizedMimeType;
+  }
+
+  return getMimeTypeFromFileName(fileName);
+}
+
+function buildAnimalMediaStorageKey(animalId: string, fileName: string) {
+  const sanitizedFileName = sanitizeFileName(fileName || "arquivo");
+  return `animals/${animalId}/${Date.now()}-${crypto.randomUUID()}-${sanitizedFileName}`;
+}
+
+function isValidUploadSessionId(value: string) {
+  return /^[a-f0-9-]{36}$/i.test(value);
+}
+
+function buildAnimalMediaUploadChunkKey(animalId: string, sessionId: string, chunkIndex: number) {
+  return `animals/${animalId}/.uploads/${sessionId}/${String(chunkIndex).padStart(6, "0")}.chunk`;
+}
+
+function resolveAnimalIdFromStorageKey(storageKey: string) {
+  const normalizedKey = normalizeStorageKey(storageKey);
+  const [prefix, animalId] = normalizedKey.split("/");
+
+  return prefix === "animals" && animalId ? animalId : null;
 }
 
 function parseRangeHeader(rangeHeader: string | null, fileSize: number) {
@@ -207,32 +238,193 @@ function getMediaCacheHeaders() {
   };
 }
 
-async function uploadAnimalMedia({ animalId, file }: { animalId: string; file: File }) {
+function createAnimalMediaUploadSession({
+  animalId,
+  contentType,
+  fileName,
+  fileSize,
+}: {
+  animalId: string;
+  contentType: string;
+  fileName: string;
+  fileSize: number;
+}): AnimalMediaUploadSessionPayload {
   ensureStorageConfigured();
 
-  const bucket = getStorageBucket();
-  const fileName = sanitizeFileName(file.name || "arquivo");
-  const storageKey = `animals/${animalId}/${Date.now()}-${crypto.randomUUID()}-${fileName}`;
-  const contentType = file.type || "application/octet-stream";
-  const body = Buffer.from(await file.arrayBuffer());
+  if (!Number.isFinite(fileSize) || fileSize <= 0) {
+    throw new Error("Arquivo invalido.");
+  }
+
+  if (fileSize > maxAnimalMediaUploadSizeInBytes) {
+    throw new Error(`Cada arquivo deve ter no maximo ${maxAnimalMediaUploadSizeLabel}.`);
+  }
+
+  const resolvedFileName = fileName.trim() || "arquivo";
+  const resolvedContentType = resolveMediaUploadContentType(resolvedFileName, contentType);
+  const storageKey = buildAnimalMediaStorageKey(animalId, resolvedFileName);
+  const totalChunks = Math.ceil(fileSize / animalMediaUploadChunkSizeInBytes);
+
+  return {
+    contentType: resolvedContentType,
+    fileName: resolvedFileName,
+    kind: getMediaKindFromMimeType(resolvedContentType),
+    sessionId: crypto.randomUUID(),
+    storageKey,
+    totalChunks,
+  };
+}
+
+async function uploadAnimalMediaChunk({
+  chunkBody,
+  chunkIndex,
+  sessionId,
+  storageKey,
+}: {
+  chunkBody: Buffer;
+  chunkIndex: number;
+  sessionId: string;
+  storageKey: string;
+}) {
+  ensureStorageConfigured();
+
+  if (!isValidUploadSessionId(sessionId)) {
+    throw new Error("Sessao de upload invalida.");
+  }
+
+  if (!Number.isInteger(chunkIndex) || chunkIndex < 0) {
+    throw new Error("Indice de chunk invalido.");
+  }
+
+  if (!chunkBody.byteLength || chunkBody.byteLength > animalMediaUploadChunkSizeInBytes) {
+    throw new Error("Chunk invalido para upload.");
+  }
+
+  const animalId = resolveAnimalIdFromStorageKey(storageKey);
+
+  if (!animalId) {
+    throw new Error("Chave de armazenamento invalida.");
+  }
+
   const client = getS3Client();
+  const chunkKey = buildAnimalMediaUploadChunkKey(animalId, sessionId, chunkIndex);
 
   await client.send(
     new PutObjectCommand({
-      Body: body,
-      Bucket: bucket,
+      Body: chunkBody,
+      Bucket: getStorageBucket(),
+      ContentType: "application/octet-stream",
+      Key: chunkKey,
+    }),
+  );
+
+  return chunkKey;
+}
+
+async function commitAnimalMediaUpload({
+  contentType,
+  fileName,
+  sessionId,
+  storageKey,
+  totalChunks,
+}: {
+  contentType: string;
+  fileName: string;
+  sessionId: string;
+  storageKey: string;
+  totalChunks: number;
+}) {
+  ensureStorageConfigured();
+
+  if (!isValidUploadSessionId(sessionId)) {
+    throw new Error("Sessao de upload invalida.");
+  }
+
+  if (!Number.isInteger(totalChunks) || totalChunks <= 0) {
+    throw new Error("Quantidade de chunks invalida.");
+  }
+
+  const animalId = resolveAnimalIdFromStorageKey(storageKey);
+
+  if (!animalId) {
+    throw new Error("Chave de armazenamento invalida.");
+  }
+
+  const client = getS3Client();
+  const chunkKeys = Array.from({ length: totalChunks }, (_, chunkIndex) =>
+    buildAnimalMediaUploadChunkKey(animalId, sessionId, chunkIndex),
+  );
+  const buffers: Buffer[] = [];
+
+  for (const chunkKey of chunkKeys) {
+    const response = await client.send(
+      new GetObjectCommand({
+        Bucket: getStorageBucket(),
+        Key: chunkKey,
+      }),
+    );
+
+    if (!response.Body) {
+      throw new Error("Nao foi possivel recuperar um chunk do upload.");
+    }
+
+    const chunkBytes = await response.Body.transformToByteArray();
+    buffers.push(Buffer.from(chunkBytes));
+  }
+
+  const finalBuffer = Buffer.concat(buffers);
+
+  if (!finalBuffer.byteLength || finalBuffer.byteLength > maxAnimalMediaUploadSizeInBytes) {
+    throw new Error(`Cada arquivo deve ter no maximo ${maxAnimalMediaUploadSizeLabel}.`);
+  }
+
+  await client.send(
+    new PutObjectCommand({
+      Body: finalBuffer,
+      Bucket: getStorageBucket(),
       ContentType: contentType,
       Key: storageKey,
     }),
   );
 
+  await deleteStorageObjects(chunkKeys);
+
   return {
-    bucket,
+    bucket: getStorageBucket(),
     contentType,
-    fileName: file.name || fileName,
+    fileName,
     kind: getMediaKindFromMimeType(contentType),
     storageKey,
   };
+}
+
+async function abortAnimalMediaUpload({
+  sessionId,
+  storageKey,
+  totalChunks,
+}: {
+  sessionId: string;
+  storageKey: string;
+  totalChunks: number;
+}) {
+  ensureStorageConfigured();
+
+  if (!isValidUploadSessionId(sessionId)) {
+    return;
+  }
+
+  if (!Number.isInteger(totalChunks) || totalChunks <= 0) {
+    return;
+  }
+
+  const animalId = resolveAnimalIdFromStorageKey(storageKey);
+
+  if (!animalId) {
+    return;
+  }
+
+  await deleteStorageObjects(
+    Array.from({ length: totalChunks }, (_, chunkIndex) => buildAnimalMediaUploadChunkKey(animalId, sessionId, chunkIndex)),
+  );
 }
 
 async function deleteStorageObject(storageKey: string) {
@@ -288,5 +480,8 @@ export {
   getMediaResponse,
   getPublicMediaUrl,
   getStorageBucket,
-  uploadAnimalMedia,
+  abortAnimalMediaUpload,
+  commitAnimalMediaUpload,
+  createAnimalMediaUploadSession,
+  uploadAnimalMediaChunk,
 };

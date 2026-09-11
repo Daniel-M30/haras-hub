@@ -1,4 +1,4 @@
-import { Availability, CharacteristicDataType, MediaKind } from "@/src/generated/prisma/enums";
+import { CharacteristicDataType, MediaKind } from "@/src/generated/prisma/enums";
 
 type AdminMode = "view" | "create" | "edit";
 type AdminAction = "read" | "create" | "update" | "delete";
@@ -51,6 +51,7 @@ type AdminAnimalTypeCharacteristicFormState = {
   label: string;
   selected: boolean;
   dataType: CharacteristicDataType;
+  isBirthDate: boolean;
   required: boolean;
   showInCard: boolean;
   displayOrder: string;
@@ -62,6 +63,7 @@ type AdminAnimalCharacteristicDefinition = {
   key: string;
   label: string;
   dataType: CharacteristicDataType;
+  isBirthDate: boolean;
   required: boolean;
   options: AdminOption[];
 };
@@ -141,6 +143,7 @@ type CharacteristicAdminFormState = {
   values: {
     dataType: CharacteristicDataType;
     isFilterable: boolean;
+    isBirthDate: boolean;
     key: string;
     label: string;
     optionsText: string;
@@ -169,7 +172,7 @@ type AnimalAdminFormState = {
     identifier: string;
     name: string;
     description: string;
-    availability: Availability;
+    availability: number;
     animalTypeId: string;
   };
   animalTypes: AdminAnimalTypeFormOption[];

@@ -59,7 +59,6 @@ export default async function Page({ params }: AnimalDetailPageProps) {
         <div className="min-w-0 flex flex-col gap-6">
           <div className="rounded-3xl border border-white/8 bg-[#151311] p-6 text-[#ece6dd] shadow-[0_20px_45px_-30px_rgba(0,0,0,0.72)]">
             <h1 className="py-1 text-4xl font-bold">{item.name}</h1>
-            <p className="text-xs font-bold tracking-[0.16em] text-[#8f8579]">Identificador: {item.identifier}</p>
           </div>
 
           <div className="rounded-3xl border border-white/8 bg-[#151311] p-6 text-[#ece6dd] shadow-[0_20px_45px_-30px_rgba(0,0,0,0.72)]">

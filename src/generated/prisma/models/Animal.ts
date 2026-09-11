@@ -20,8 +20,18 @@ export type AnimalModel = runtime.Types.Result.DefaultSelection<Prisma.$AnimalPa
 
 export type AggregateAnimal = {
   _count: AnimalCountAggregateOutputType | null
+  _avg: AnimalAvgAggregateOutputType | null
+  _sum: AnimalSumAggregateOutputType | null
   _min: AnimalMinAggregateOutputType | null
   _max: AnimalMaxAggregateOutputType | null
+}
+
+export type AnimalAvgAggregateOutputType = {
+  availability: number | null
+}
+
+export type AnimalSumAggregateOutputType = {
+  availability: number | null
 }
 
 export type AnimalMinAggregateOutputType = {
@@ -29,7 +39,7 @@ export type AnimalMinAggregateOutputType = {
   identifier: string | null
   name: string | null
   description: string | null
-  availability: $Enums.Availability | null
+  availability: number | null
   animalTypeId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -40,7 +50,7 @@ export type AnimalMaxAggregateOutputType = {
   identifier: string | null
   name: string | null
   description: string | null
-  availability: $Enums.Availability | null
+  availability: number | null
   animalTypeId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -58,6 +68,14 @@ export type AnimalCountAggregateOutputType = {
   _all: number
 }
 
+
+export type AnimalAvgAggregateInputType = {
+  availability?: true
+}
+
+export type AnimalSumAggregateInputType = {
+  availability?: true
+}
 
 export type AnimalMinAggregateInputType = {
   id?: true
@@ -131,6 +149,18 @@ export type AnimalAggregateArgs<ExtArgs extends runtime.Types.Extensions.Interna
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: AnimalAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: AnimalSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: AnimalMinAggregateInputType
@@ -161,6 +191,8 @@ export type AnimalGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   _count?: AnimalCountAggregateInputType | true
+  _avg?: AnimalAvgAggregateInputType
+  _sum?: AnimalSumAggregateInputType
   _min?: AnimalMinAggregateInputType
   _max?: AnimalMaxAggregateInputType
 }
@@ -170,11 +202,13 @@ export type AnimalGroupByOutputType = {
   identifier: string
   name: string
   description: string | null
-  availability: $Enums.Availability
+  availability: number
   animalTypeId: string
   createdAt: Date
   updatedAt: Date
   _count: AnimalCountAggregateOutputType | null
+  _avg: AnimalAvgAggregateOutputType | null
+  _sum: AnimalSumAggregateOutputType | null
   _min: AnimalMinAggregateOutputType | null
   _max: AnimalMaxAggregateOutputType | null
 }
@@ -202,7 +236,7 @@ export type AnimalWhereInput = {
   identifier?: Prisma.StringFilter<"Animal"> | string
   name?: Prisma.StringFilter<"Animal"> | string
   description?: Prisma.StringNullableFilter<"Animal"> | string | null
-  availability?: Prisma.EnumAvailabilityFilter<"Animal"> | $Enums.Availability
+  availability?: Prisma.IntFilter<"Animal"> | number
   animalTypeId?: Prisma.StringFilter<"Animal"> | string
   createdAt?: Prisma.DateTimeFilter<"Animal"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Animal"> | Date | string
@@ -233,7 +267,7 @@ export type AnimalWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.AnimalWhereInput | Prisma.AnimalWhereInput[]
   name?: Prisma.StringFilter<"Animal"> | string
   description?: Prisma.StringNullableFilter<"Animal"> | string | null
-  availability?: Prisma.EnumAvailabilityFilter<"Animal"> | $Enums.Availability
+  availability?: Prisma.IntFilter<"Animal"> | number
   animalTypeId?: Prisma.StringFilter<"Animal"> | string
   createdAt?: Prisma.DateTimeFilter<"Animal"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Animal"> | Date | string
@@ -252,8 +286,10 @@ export type AnimalOrderByWithAggregationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.AnimalCountOrderByAggregateInput
+  _avg?: Prisma.AnimalAvgOrderByAggregateInput
   _max?: Prisma.AnimalMaxOrderByAggregateInput
   _min?: Prisma.AnimalMinOrderByAggregateInput
+  _sum?: Prisma.AnimalSumOrderByAggregateInput
 }
 
 export type AnimalScalarWhereWithAggregatesInput = {
@@ -264,7 +300,7 @@ export type AnimalScalarWhereWithAggregatesInput = {
   identifier?: Prisma.StringWithAggregatesFilter<"Animal"> | string
   name?: Prisma.StringWithAggregatesFilter<"Animal"> | string
   description?: Prisma.StringNullableWithAggregatesFilter<"Animal"> | string | null
-  availability?: Prisma.EnumAvailabilityWithAggregatesFilter<"Animal"> | $Enums.Availability
+  availability?: Prisma.IntWithAggregatesFilter<"Animal"> | number
   animalTypeId?: Prisma.StringWithAggregatesFilter<"Animal"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Animal"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Animal"> | Date | string
@@ -275,7 +311,7 @@ export type AnimalCreateInput = {
   identifier: string
   name: string
   description?: string | null
-  availability?: $Enums.Availability
+  availability?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   animalType: Prisma.AnimalTypeCreateNestedOneWithoutAnimalsInput
@@ -288,7 +324,7 @@ export type AnimalUncheckedCreateInput = {
   identifier: string
   name: string
   description?: string | null
-  availability?: $Enums.Availability
+  availability?: number
   animalTypeId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -301,7 +337,7 @@ export type AnimalUpdateInput = {
   identifier?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  availability?: Prisma.EnumAvailabilityFieldUpdateOperationsInput | $Enums.Availability
+  availability?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   animalType?: Prisma.AnimalTypeUpdateOneRequiredWithoutAnimalsNestedInput
@@ -314,7 +350,7 @@ export type AnimalUncheckedUpdateInput = {
   identifier?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  availability?: Prisma.EnumAvailabilityFieldUpdateOperationsInput | $Enums.Availability
+  availability?: Prisma.IntFieldUpdateOperationsInput | number
   animalTypeId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -327,7 +363,7 @@ export type AnimalCreateManyInput = {
   identifier: string
   name: string
   description?: string | null
-  availability?: $Enums.Availability
+  availability?: number
   animalTypeId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -338,7 +374,7 @@ export type AnimalUpdateManyMutationInput = {
   identifier?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  availability?: Prisma.EnumAvailabilityFieldUpdateOperationsInput | $Enums.Availability
+  availability?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -348,7 +384,7 @@ export type AnimalUncheckedUpdateManyInput = {
   identifier?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  availability?: Prisma.EnumAvailabilityFieldUpdateOperationsInput | $Enums.Availability
+  availability?: Prisma.IntFieldUpdateOperationsInput | number
   animalTypeId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -375,6 +411,10 @@ export type AnimalCountOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
+export type AnimalAvgOrderByAggregateInput = {
+  availability?: Prisma.SortOrder
+}
+
 export type AnimalMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   identifier?: Prisma.SortOrder
@@ -395,6 +435,10 @@ export type AnimalMinOrderByAggregateInput = {
   animalTypeId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type AnimalSumOrderByAggregateInput = {
+  availability?: Prisma.SortOrder
 }
 
 export type AnimalScalarRelationFilter = {
@@ -444,8 +488,12 @@ export type AnimalUncheckedUpdateManyWithoutAnimalTypeNestedInput = {
   deleteMany?: Prisma.AnimalScalarWhereInput | Prisma.AnimalScalarWhereInput[]
 }
 
-export type EnumAvailabilityFieldUpdateOperationsInput = {
-  set?: $Enums.Availability
+export type IntFieldUpdateOperationsInput = {
+  set?: number
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
 }
 
 export type AnimalCreateNestedOneWithoutMediaInput = {
@@ -481,7 +529,7 @@ export type AnimalCreateWithoutAnimalTypeInput = {
   identifier: string
   name: string
   description?: string | null
-  availability?: $Enums.Availability
+  availability?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   characteristicValues?: Prisma.AnimalCharacteristicValueCreateNestedManyWithoutAnimalInput
@@ -493,7 +541,7 @@ export type AnimalUncheckedCreateWithoutAnimalTypeInput = {
   identifier: string
   name: string
   description?: string | null
-  availability?: $Enums.Availability
+  availability?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   characteristicValues?: Prisma.AnimalCharacteristicValueUncheckedCreateNestedManyWithoutAnimalInput
@@ -534,7 +582,7 @@ export type AnimalScalarWhereInput = {
   identifier?: Prisma.StringFilter<"Animal"> | string
   name?: Prisma.StringFilter<"Animal"> | string
   description?: Prisma.StringNullableFilter<"Animal"> | string | null
-  availability?: Prisma.EnumAvailabilityFilter<"Animal"> | $Enums.Availability
+  availability?: Prisma.IntFilter<"Animal"> | number
   animalTypeId?: Prisma.StringFilter<"Animal"> | string
   createdAt?: Prisma.DateTimeFilter<"Animal"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Animal"> | Date | string
@@ -545,7 +593,7 @@ export type AnimalCreateWithoutMediaInput = {
   identifier: string
   name: string
   description?: string | null
-  availability?: $Enums.Availability
+  availability?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   animalType: Prisma.AnimalTypeCreateNestedOneWithoutAnimalsInput
@@ -557,7 +605,7 @@ export type AnimalUncheckedCreateWithoutMediaInput = {
   identifier: string
   name: string
   description?: string | null
-  availability?: $Enums.Availability
+  availability?: number
   animalTypeId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -585,7 +633,7 @@ export type AnimalUpdateWithoutMediaInput = {
   identifier?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  availability?: Prisma.EnumAvailabilityFieldUpdateOperationsInput | $Enums.Availability
+  availability?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   animalType?: Prisma.AnimalTypeUpdateOneRequiredWithoutAnimalsNestedInput
@@ -597,7 +645,7 @@ export type AnimalUncheckedUpdateWithoutMediaInput = {
   identifier?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  availability?: Prisma.EnumAvailabilityFieldUpdateOperationsInput | $Enums.Availability
+  availability?: Prisma.IntFieldUpdateOperationsInput | number
   animalTypeId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -609,7 +657,7 @@ export type AnimalCreateWithoutCharacteristicValuesInput = {
   identifier: string
   name: string
   description?: string | null
-  availability?: $Enums.Availability
+  availability?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   animalType: Prisma.AnimalTypeCreateNestedOneWithoutAnimalsInput
@@ -621,7 +669,7 @@ export type AnimalUncheckedCreateWithoutCharacteristicValuesInput = {
   identifier: string
   name: string
   description?: string | null
-  availability?: $Enums.Availability
+  availability?: number
   animalTypeId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -649,7 +697,7 @@ export type AnimalUpdateWithoutCharacteristicValuesInput = {
   identifier?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  availability?: Prisma.EnumAvailabilityFieldUpdateOperationsInput | $Enums.Availability
+  availability?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   animalType?: Prisma.AnimalTypeUpdateOneRequiredWithoutAnimalsNestedInput
@@ -661,7 +709,7 @@ export type AnimalUncheckedUpdateWithoutCharacteristicValuesInput = {
   identifier?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  availability?: Prisma.EnumAvailabilityFieldUpdateOperationsInput | $Enums.Availability
+  availability?: Prisma.IntFieldUpdateOperationsInput | number
   animalTypeId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -673,7 +721,7 @@ export type AnimalCreateManyAnimalTypeInput = {
   identifier: string
   name: string
   description?: string | null
-  availability?: $Enums.Availability
+  availability?: number
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -683,7 +731,7 @@ export type AnimalUpdateWithoutAnimalTypeInput = {
   identifier?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  availability?: Prisma.EnumAvailabilityFieldUpdateOperationsInput | $Enums.Availability
+  availability?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   characteristicValues?: Prisma.AnimalCharacteristicValueUpdateManyWithoutAnimalNestedInput
@@ -695,7 +743,7 @@ export type AnimalUncheckedUpdateWithoutAnimalTypeInput = {
   identifier?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  availability?: Prisma.EnumAvailabilityFieldUpdateOperationsInput | $Enums.Availability
+  availability?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   characteristicValues?: Prisma.AnimalCharacteristicValueUncheckedUpdateManyWithoutAnimalNestedInput
@@ -707,7 +755,7 @@ export type AnimalUncheckedUpdateManyWithoutAnimalTypeInput = {
   identifier?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  availability?: Prisma.EnumAvailabilityFieldUpdateOperationsInput | $Enums.Availability
+  availability?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -828,7 +876,7 @@ export type $AnimalPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     identifier: string
     name: string
     description: string | null
-    availability: $Enums.Availability
+    availability: number
     animalTypeId: string
     createdAt: Date
     updatedAt: Date
@@ -1262,7 +1310,7 @@ export interface AnimalFieldRefs {
   readonly identifier: Prisma.FieldRef<"Animal", 'String'>
   readonly name: Prisma.FieldRef<"Animal", 'String'>
   readonly description: Prisma.FieldRef<"Animal", 'String'>
-  readonly availability: Prisma.FieldRef<"Animal", 'Availability'>
+  readonly availability: Prisma.FieldRef<"Animal", 'Int'>
   readonly animalTypeId: Prisma.FieldRef<"Animal", 'String'>
   readonly createdAt: Prisma.FieldRef<"Animal", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Animal", 'DateTime'>

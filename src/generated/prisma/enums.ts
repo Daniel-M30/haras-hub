@@ -9,14 +9,6 @@
 * 🟢 You can import this file directly.
 */
 
-export const Availability = {
-  available: 'available',
-  unavailable: 'unavailable'
-} as const
-
-export type Availability = (typeof Availability)[keyof typeof Availability]
-
-
 export const CharacteristicDataType = {
   text: 'text',
   number: 'number',

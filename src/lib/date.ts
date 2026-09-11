@@ -28,22 +28,56 @@ function parseDateInputValue(value: string) {
   return parsed;
 }
 
-function formatAgeFromBirthDate(value: Date, referenceDate = new Date()) {
+function getAgeFromBirthDate(value: Date, referenceDate = new Date()) {
   const referenceYear = referenceDate.getUTCFullYear();
   const referenceMonth = referenceDate.getUTCMonth();
   const referenceDay = referenceDate.getUTCDate();
-  let age = referenceYear - value.getUTCFullYear();
+  let years = referenceYear - value.getUTCFullYear();
+  let months = referenceMonth - value.getUTCMonth();
 
-  if (
-    referenceMonth < value.getUTCMonth() ||
-    (referenceMonth === value.getUTCMonth() && referenceDay < value.getUTCDate())
-  ) {
-    age -= 1;
+  if (referenceDay < value.getUTCDate()) {
+    months -= 1;
   }
 
-  const normalizedAge = Math.max(age, 0);
+  if (months < 0) {
+    years -= 1;
+    months += 12;
+  }
 
-  return normalizedAge === 1 ? "1 ano" : `${normalizedAge} anos`;
+  if (years < 0) {
+    return {
+      months: 0,
+      years: 0,
+    };
+  }
+
+  return {
+    months: Math.max(months, 0),
+    years,
+  };
 }
 
-export { formatAgeFromBirthDate, formatDateInputValue, formatDateOnly, parseDateInputValue };
+function formatMonthsLabel(months: number) {
+  return months === 1 ? "1 mes" : `${months} meses`;
+}
+
+function formatYearsLabel(years: number) {
+  return years === 1 ? "1 ano" : `${years} anos`;
+}
+
+function formatAgeFromBirthDate(value: Date, referenceDate = new Date()) {
+  const age = getAgeFromBirthDate(value, referenceDate);
+
+  if (age.years < 1) {
+    return formatMonthsLabel(age.months);
+  }
+
+  return formatYearsLabel(age.years);
+}
+
+function formatDetailedAgeFromBirthDate(value: Date, referenceDate = new Date()) {
+  const age = getAgeFromBirthDate(value, referenceDate);
+  return `${formatYearsLabel(age.years)} e ${formatMonthsLabel(age.months)}`;
+}
+
+export { formatAgeFromBirthDate, formatDateInputValue, formatDateOnly, formatDetailedAgeFromBirthDate, parseDateInputValue };

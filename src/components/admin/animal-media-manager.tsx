@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { type ChangeEvent, useState } from "react";
 import { MediaKind } from "@/src/generated/prisma/enums";
 import { apiDelete, apiPost } from "@/src/lib/api-client";
-import type { AnimalMediaManagerProps } from "@/src/types";
+import { animalMediaUploadChunkSizeInBytes, animalMediaUploadChunkSizeLabel, findOversizedUploadFile, maxAnimalMediaUploadSizeLabel } from "@/src/lib/media-upload";
+import type { AnimalMediaManagerProps, AnimalMediaUploadSessionPayload, RegisteredAnimalMediaUploadInput } from "@/src/types";
 import { Button } from "@/src/components/ui/button";
 import { LoadingState } from "@/src/components/loading-state";
 
@@ -24,20 +25,82 @@ export function AnimalMediaManager({ animalId, items, canManage }: AnimalMediaMa
     }
 
     setUploadError(null);
+
+    const oversizedFile = findOversizedUploadFile(files);
+
+    if (oversizedFile) {
+      setUploadError(`O arquivo "${oversizedFile.name}" excede o limite de ${maxAnimalMediaUploadSizeLabel}.`);
+      event.target.value = "";
+      return;
+    }
+
     setIsUploading(true);
 
     try {
-      const formData = new FormData();
-
       for (const file of Array.from(files)) {
-        formData.append("files", file);
-      }
+        const { data: uploadSession, error: uploadSessionError } = await apiPost<AnimalMediaUploadSessionPayload>(
+          `/api/admin/animals/${animalId}/media/upload`,
+          {
+            contentType: file.type,
+            fileName: file.name,
+            size: file.size,
+          },
+        );
 
-      const { error } = await apiPost<{ ok: boolean }>(`/api/admin/animals/${animalId}/media`, formData);
+        if (uploadSessionError || !uploadSession) {
+          setUploadError(uploadSessionError ?? "Nao foi possivel preparar o upload do arquivo.");
+          return;
+        }
 
-      if (error) {
-        setUploadError(error);
-        return;
+        let uploadFailed = false;
+
+        try {
+          for (let chunkIndex = 0; chunkIndex < uploadSession.totalChunks; chunkIndex += 1) {
+            const start = chunkIndex * animalMediaUploadChunkSizeInBytes;
+            const end = Math.min(start + animalMediaUploadChunkSizeInBytes, file.size);
+            const chunk = new Uint8Array(await file.slice(start, end).arrayBuffer());
+            const { error: chunkUploadError } = await apiPost<{ ok: boolean }>(
+              `/api/admin/animals/${animalId}/media/upload/chunk`,
+              chunk,
+              {
+                headers: {
+                  "Content-Type": "application/octet-stream",
+                  "x-upload-chunk-index": String(chunkIndex),
+                  "x-upload-session-id": uploadSession.sessionId,
+                  "x-upload-storage-key": uploadSession.storageKey,
+                },
+              },
+            );
+
+            if (chunkUploadError) {
+              uploadFailed = true;
+              setUploadError(chunkUploadError);
+              return;
+            }
+          }
+
+          const { error } = await apiPost<{ ok: boolean }>(`/api/admin/animals/${animalId}/media`, {
+            contentType: uploadSession.contentType,
+            fileName: uploadSession.fileName,
+            sessionId: uploadSession.sessionId,
+            storageKey: uploadSession.storageKey,
+            totalChunks: uploadSession.totalChunks,
+          } satisfies RegisteredAnimalMediaUploadInput);
+
+          if (error) {
+            uploadFailed = true;
+            setUploadError(error);
+            return;
+          }
+        } finally {
+          if (uploadFailed) {
+            await apiPost<{ ok: boolean }>(`/api/admin/animals/${animalId}/media/upload/abort`, {
+              sessionId: uploadSession.sessionId,
+              storageKey: uploadSession.storageKey,
+              totalChunks: uploadSession.totalChunks,
+            });
+          }
+        }
       }
 
       router.refresh();
@@ -74,7 +137,9 @@ export function AnimalMediaManager({ animalId, items, canManage }: AnimalMediaMa
       <div className="flex items-start justify-between gap-4">
         <div>
           <h4 className="text-lg font-semibold">Midias</h4>
-          <p className="text-sm text-[#b9afa2]">Associe fotos e videos ao animal selecionado.</p>
+          <p className="text-sm text-[#b9afa2]">
+            Associe fotos e videos ao animal selecionado. Limite por arquivo: {maxAnimalMediaUploadSizeLabel}. O envio acontece em blocos de ate {animalMediaUploadChunkSizeLabel}.
+          </p>
         </div>
 
         {canManage ? (

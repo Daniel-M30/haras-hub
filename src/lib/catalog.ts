@@ -1,6 +1,7 @@
-import { Availability, CharacteristicDataType, MediaKind } from "@/src/generated/prisma/enums";
+import { CharacteristicDataType, MediaKind } from "@/src/generated/prisma/enums";
 import type { Prisma } from "@/src/generated/prisma/client";
-import { formatAgeFromBirthDate, formatDateOnly } from "@/src/lib/date";
+import { formatAnimalAvailability, isAnimalPubliclyAvailable } from "@/src/lib/animal-availability";
+import { formatAgeFromBirthDate, formatDateOnly, formatDetailedAgeFromBirthDate } from "@/src/lib/date";
 import { prisma } from "@/src/lib/prisma";
 import { getPublicMediaUrl } from "@/src/lib/storage";
 import type {
@@ -14,8 +15,6 @@ import type {
   FilterDefinition,
   FilterableCharacteristicDataType,
 } from "@/src/types";
-
-const birthDateCharacteristicKey = "birthDate";
 
 function getCharacteristicValue(value: {
   option: { label: string; value: string } | null;
@@ -47,9 +46,9 @@ function getCharacteristicValue(value: {
   return "Nao informado";
 }
 
-function getPublicCharacteristicPresentation(
+function getPublicCardCharacteristicPresentation(
   characteristic: {
-    key: string;
+    isBirthDate: boolean;
     label: string;
   },
   value: {
@@ -60,10 +59,36 @@ function getPublicCharacteristicPresentation(
     valueText: string | null;
   },
 ) {
-  if (characteristic.key === birthDateCharacteristicKey && value.valueDate) {
+  if (characteristic.isBirthDate && value.valueDate) {
     return {
       label: "Idade",
       value: formatAgeFromBirthDate(value.valueDate),
+    };
+  }
+
+  return {
+    label: characteristic.label,
+    value: getCharacteristicValue(value),
+  };
+}
+
+function getPublicDetailCharacteristicPresentation(
+  characteristic: {
+    isBirthDate: boolean;
+    label: string;
+  },
+  value: {
+    option: { label: string; value: string } | null;
+    valueBoolean: boolean | null;
+    valueDate: Date | null;
+    valueNumber: number | null;
+    valueText: string | null;
+  },
+) {
+  if (characteristic.isBirthDate && value.valueDate) {
+    return {
+      label: characteristic.label,
+      value: `${formatDateOnly(value.valueDate)} (${formatDetailedAgeFromBirthDate(value.valueDate)})`,
     };
   }
 
@@ -111,7 +136,7 @@ function buildCatalogWhere(query: CatalogQuery): Prisma.AnimalWhereInput {
         .filter((token): token is CatalogParsedCharacteristicToken => Boolean(token)),
     ),
   ];
-  const conditions: Prisma.AnimalWhereInput[] = [{ availability: Availability.available }];
+  const conditions: Prisma.AnimalWhereInput[] = [{ availability: { gt: 0 } }];
 
   if (search) {
     conditions.push({
@@ -265,7 +290,7 @@ export async function getCatalogAnimals(query: CatalogQuery = {}): Promise<Catal
               characteristicId: true,
               characteristic: {
                 select: {
-                  key: true,
+                  isBirthDate: true,
                   label: true,
                 },
               },
@@ -317,7 +342,7 @@ export async function getCatalogAnimals(query: CatalogQuery = {}): Promise<Catal
             return null;
           }
 
-          const presentation = getPublicCharacteristicPresentation(item.characteristic, rawValue);
+          const presentation = getPublicCardCharacteristicPresentation(item.characteristic, rawValue);
 
           if (!presentation.value || presentation.value === "Nao informado") {
             return null;
@@ -610,7 +635,7 @@ export async function getFeaturedCatalogAnimals(): Promise<CatalogCarouselEntry[
   });
 
   return entries
-    .filter(entry => entry.animalMedia.kind === MediaKind.image && entry.animalMedia.animal.availability === Availability.available)
+    .filter(entry => entry.animalMedia.kind === MediaKind.image && isAnimalPubliclyAvailable(entry.animalMedia.animal.availability))
     .map(entry => ({
       description: entry.description ?? entry.animalMedia.animal.description ?? "Animal em destaque no catalogo.",
       href: `/animal/${entry.animalMedia.animal.identifier}`,
@@ -635,6 +660,7 @@ export async function getCatalogAnimalByIdentifier(identifier: string): Promise<
         select: {
           characteristic: {
             select: {
+              isBirthDate: true,
               key: true,
               label: true,
             },
@@ -674,7 +700,7 @@ export async function getCatalogAnimalByIdentifier(identifier: string): Promise<
 
   const characteristics = animal.characteristicValues
     .map(item => {
-      const presentation = getPublicCharacteristicPresentation(item.characteristic, item);
+      const presentation = getPublicDetailCharacteristicPresentation(item.characteristic, item);
 
       return {
         key: item.characteristic.key,
@@ -685,23 +711,19 @@ export async function getCatalogAnimalByIdentifier(identifier: string): Promise<
     .sort((left, right) => left.label.localeCompare(right.label, "pt-BR"));
 
   return {
-    availability: animal.availability === Availability.available ? "Disponivel" : "Indisponivel",
+    availability: formatAnimalAvailability(animal.availability),
     characteristics,
     description: animal.description ?? "Sem descricao cadastrada.",
     id: animal.id,
     identifier: animal.identifier,
     info: [
       {
-        label: "Identificador",
-        value: animal.identifier,
-      },
-      {
         label: "Tipo",
         value: animal.animalType.name,
       },
       {
         label: "Disponibilidade",
-        value: animal.availability === Availability.available ? "Disponivel" : "Indisponivel",
+        value: formatAnimalAvailability(animal.availability),
       },
     ],
     media: animal.media.map(item => ({

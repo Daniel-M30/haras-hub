@@ -210,7 +210,8 @@ export const CharacteristicScalarFieldEnum = {
   key: 'key',
   label: 'label',
   dataType: 'dataType',
-  isFilterable: 'isFilterable'
+  isFilterable: 'isFilterable',
+  isBirthDate: 'isBirthDate'
 } as const
 
 export type CharacteristicScalarFieldEnum = (typeof CharacteristicScalarFieldEnum)[keyof typeof CharacteristicScalarFieldEnum]

@@ -30,6 +30,7 @@ export type CharacteristicMinAggregateOutputType = {
   label: string | null
   dataType: $Enums.CharacteristicDataType | null
   isFilterable: boolean | null
+  isBirthDate: boolean | null
 }
 
 export type CharacteristicMaxAggregateOutputType = {
@@ -38,6 +39,7 @@ export type CharacteristicMaxAggregateOutputType = {
   label: string | null
   dataType: $Enums.CharacteristicDataType | null
   isFilterable: boolean | null
+  isBirthDate: boolean | null
 }
 
 export type CharacteristicCountAggregateOutputType = {
@@ -46,6 +48,7 @@ export type CharacteristicCountAggregateOutputType = {
   label: number
   dataType: number
   isFilterable: number
+  isBirthDate: number
   _all: number
 }
 
@@ -56,6 +59,7 @@ export type CharacteristicMinAggregateInputType = {
   label?: true
   dataType?: true
   isFilterable?: true
+  isBirthDate?: true
 }
 
 export type CharacteristicMaxAggregateInputType = {
@@ -64,6 +68,7 @@ export type CharacteristicMaxAggregateInputType = {
   label?: true
   dataType?: true
   isFilterable?: true
+  isBirthDate?: true
 }
 
 export type CharacteristicCountAggregateInputType = {
@@ -72,6 +77,7 @@ export type CharacteristicCountAggregateInputType = {
   label?: true
   dataType?: true
   isFilterable?: true
+  isBirthDate?: true
   _all?: true
 }
 
@@ -153,6 +159,7 @@ export type CharacteristicGroupByOutputType = {
   label: string
   dataType: $Enums.CharacteristicDataType
   isFilterable: boolean
+  isBirthDate: boolean
   _count: CharacteristicCountAggregateOutputType | null
   _min: CharacteristicMinAggregateOutputType | null
   _max: CharacteristicMaxAggregateOutputType | null
@@ -182,6 +189,7 @@ export type CharacteristicWhereInput = {
   label?: Prisma.StringFilter<"Characteristic"> | string
   dataType?: Prisma.EnumCharacteristicDataTypeFilter<"Characteristic"> | $Enums.CharacteristicDataType
   isFilterable?: Prisma.BoolFilter<"Characteristic"> | boolean
+  isBirthDate?: Prisma.BoolFilter<"Characteristic"> | boolean
   animalTypes?: Prisma.AnimalTypeCharacteristicListRelationFilter
   options?: Prisma.CharacteristicOptionListRelationFilter
   values?: Prisma.AnimalCharacteristicValueListRelationFilter
@@ -193,6 +201,7 @@ export type CharacteristicOrderByWithRelationInput = {
   label?: Prisma.SortOrder
   dataType?: Prisma.SortOrder
   isFilterable?: Prisma.SortOrder
+  isBirthDate?: Prisma.SortOrder
   animalTypes?: Prisma.AnimalTypeCharacteristicOrderByRelationAggregateInput
   options?: Prisma.CharacteristicOptionOrderByRelationAggregateInput
   values?: Prisma.AnimalCharacteristicValueOrderByRelationAggregateInput
@@ -207,6 +216,7 @@ export type CharacteristicWhereUniqueInput = Prisma.AtLeast<{
   label?: Prisma.StringFilter<"Characteristic"> | string
   dataType?: Prisma.EnumCharacteristicDataTypeFilter<"Characteristic"> | $Enums.CharacteristicDataType
   isFilterable?: Prisma.BoolFilter<"Characteristic"> | boolean
+  isBirthDate?: Prisma.BoolFilter<"Characteristic"> | boolean
   animalTypes?: Prisma.AnimalTypeCharacteristicListRelationFilter
   options?: Prisma.CharacteristicOptionListRelationFilter
   values?: Prisma.AnimalCharacteristicValueListRelationFilter
@@ -218,6 +228,7 @@ export type CharacteristicOrderByWithAggregationInput = {
   label?: Prisma.SortOrder
   dataType?: Prisma.SortOrder
   isFilterable?: Prisma.SortOrder
+  isBirthDate?: Prisma.SortOrder
   _count?: Prisma.CharacteristicCountOrderByAggregateInput
   _max?: Prisma.CharacteristicMaxOrderByAggregateInput
   _min?: Prisma.CharacteristicMinOrderByAggregateInput
@@ -232,6 +243,7 @@ export type CharacteristicScalarWhereWithAggregatesInput = {
   label?: Prisma.StringWithAggregatesFilter<"Characteristic"> | string
   dataType?: Prisma.EnumCharacteristicDataTypeWithAggregatesFilter<"Characteristic"> | $Enums.CharacteristicDataType
   isFilterable?: Prisma.BoolWithAggregatesFilter<"Characteristic"> | boolean
+  isBirthDate?: Prisma.BoolWithAggregatesFilter<"Characteristic"> | boolean
 }
 
 export type CharacteristicCreateInput = {
@@ -240,6 +252,7 @@ export type CharacteristicCreateInput = {
   label: string
   dataType?: $Enums.CharacteristicDataType
   isFilterable?: boolean
+  isBirthDate?: boolean
   animalTypes?: Prisma.AnimalTypeCharacteristicCreateNestedManyWithoutCharacteristicInput
   options?: Prisma.CharacteristicOptionCreateNestedManyWithoutCharacteristicInput
   values?: Prisma.AnimalCharacteristicValueCreateNestedManyWithoutCharacteristicInput
@@ -251,6 +264,7 @@ export type CharacteristicUncheckedCreateInput = {
   label: string
   dataType?: $Enums.CharacteristicDataType
   isFilterable?: boolean
+  isBirthDate?: boolean
   animalTypes?: Prisma.AnimalTypeCharacteristicUncheckedCreateNestedManyWithoutCharacteristicInput
   options?: Prisma.CharacteristicOptionUncheckedCreateNestedManyWithoutCharacteristicInput
   values?: Prisma.AnimalCharacteristicValueUncheckedCreateNestedManyWithoutCharacteristicInput
@@ -262,6 +276,7 @@ export type CharacteristicUpdateInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   dataType?: Prisma.EnumCharacteristicDataTypeFieldUpdateOperationsInput | $Enums.CharacteristicDataType
   isFilterable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isBirthDate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   animalTypes?: Prisma.AnimalTypeCharacteristicUpdateManyWithoutCharacteristicNestedInput
   options?: Prisma.CharacteristicOptionUpdateManyWithoutCharacteristicNestedInput
   values?: Prisma.AnimalCharacteristicValueUpdateManyWithoutCharacteristicNestedInput
@@ -273,6 +288,7 @@ export type CharacteristicUncheckedUpdateInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   dataType?: Prisma.EnumCharacteristicDataTypeFieldUpdateOperationsInput | $Enums.CharacteristicDataType
   isFilterable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isBirthDate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   animalTypes?: Prisma.AnimalTypeCharacteristicUncheckedUpdateManyWithoutCharacteristicNestedInput
   options?: Prisma.CharacteristicOptionUncheckedUpdateManyWithoutCharacteristicNestedInput
   values?: Prisma.AnimalCharacteristicValueUncheckedUpdateManyWithoutCharacteristicNestedInput
@@ -284,6 +300,7 @@ export type CharacteristicCreateManyInput = {
   label: string
   dataType?: $Enums.CharacteristicDataType
   isFilterable?: boolean
+  isBirthDate?: boolean
 }
 
 export type CharacteristicUpdateManyMutationInput = {
@@ -292,6 +309,7 @@ export type CharacteristicUpdateManyMutationInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   dataType?: Prisma.EnumCharacteristicDataTypeFieldUpdateOperationsInput | $Enums.CharacteristicDataType
   isFilterable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isBirthDate?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type CharacteristicUncheckedUpdateManyInput = {
@@ -300,6 +318,7 @@ export type CharacteristicUncheckedUpdateManyInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   dataType?: Prisma.EnumCharacteristicDataTypeFieldUpdateOperationsInput | $Enums.CharacteristicDataType
   isFilterable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isBirthDate?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type CharacteristicCountOrderByAggregateInput = {
@@ -308,6 +327,7 @@ export type CharacteristicCountOrderByAggregateInput = {
   label?: Prisma.SortOrder
   dataType?: Prisma.SortOrder
   isFilterable?: Prisma.SortOrder
+  isBirthDate?: Prisma.SortOrder
 }
 
 export type CharacteristicMaxOrderByAggregateInput = {
@@ -316,6 +336,7 @@ export type CharacteristicMaxOrderByAggregateInput = {
   label?: Prisma.SortOrder
   dataType?: Prisma.SortOrder
   isFilterable?: Prisma.SortOrder
+  isBirthDate?: Prisma.SortOrder
 }
 
 export type CharacteristicMinOrderByAggregateInput = {
@@ -324,6 +345,7 @@ export type CharacteristicMinOrderByAggregateInput = {
   label?: Prisma.SortOrder
   dataType?: Prisma.SortOrder
   isFilterable?: Prisma.SortOrder
+  isBirthDate?: Prisma.SortOrder
 }
 
 export type CharacteristicScalarRelationFilter = {
@@ -383,6 +405,7 @@ export type CharacteristicCreateWithoutAnimalTypesInput = {
   label: string
   dataType?: $Enums.CharacteristicDataType
   isFilterable?: boolean
+  isBirthDate?: boolean
   options?: Prisma.CharacteristicOptionCreateNestedManyWithoutCharacteristicInput
   values?: Prisma.AnimalCharacteristicValueCreateNestedManyWithoutCharacteristicInput
 }
@@ -393,6 +416,7 @@ export type CharacteristicUncheckedCreateWithoutAnimalTypesInput = {
   label: string
   dataType?: $Enums.CharacteristicDataType
   isFilterable?: boolean
+  isBirthDate?: boolean
   options?: Prisma.CharacteristicOptionUncheckedCreateNestedManyWithoutCharacteristicInput
   values?: Prisma.AnimalCharacteristicValueUncheckedCreateNestedManyWithoutCharacteristicInput
 }
@@ -419,6 +443,7 @@ export type CharacteristicUpdateWithoutAnimalTypesInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   dataType?: Prisma.EnumCharacteristicDataTypeFieldUpdateOperationsInput | $Enums.CharacteristicDataType
   isFilterable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isBirthDate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   options?: Prisma.CharacteristicOptionUpdateManyWithoutCharacteristicNestedInput
   values?: Prisma.AnimalCharacteristicValueUpdateManyWithoutCharacteristicNestedInput
 }
@@ -429,6 +454,7 @@ export type CharacteristicUncheckedUpdateWithoutAnimalTypesInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   dataType?: Prisma.EnumCharacteristicDataTypeFieldUpdateOperationsInput | $Enums.CharacteristicDataType
   isFilterable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isBirthDate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   options?: Prisma.CharacteristicOptionUncheckedUpdateManyWithoutCharacteristicNestedInput
   values?: Prisma.AnimalCharacteristicValueUncheckedUpdateManyWithoutCharacteristicNestedInput
 }
@@ -439,6 +465,7 @@ export type CharacteristicCreateWithoutOptionsInput = {
   label: string
   dataType?: $Enums.CharacteristicDataType
   isFilterable?: boolean
+  isBirthDate?: boolean
   animalTypes?: Prisma.AnimalTypeCharacteristicCreateNestedManyWithoutCharacteristicInput
   values?: Prisma.AnimalCharacteristicValueCreateNestedManyWithoutCharacteristicInput
 }
@@ -449,6 +476,7 @@ export type CharacteristicUncheckedCreateWithoutOptionsInput = {
   label: string
   dataType?: $Enums.CharacteristicDataType
   isFilterable?: boolean
+  isBirthDate?: boolean
   animalTypes?: Prisma.AnimalTypeCharacteristicUncheckedCreateNestedManyWithoutCharacteristicInput
   values?: Prisma.AnimalCharacteristicValueUncheckedCreateNestedManyWithoutCharacteristicInput
 }
@@ -475,6 +503,7 @@ export type CharacteristicUpdateWithoutOptionsInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   dataType?: Prisma.EnumCharacteristicDataTypeFieldUpdateOperationsInput | $Enums.CharacteristicDataType
   isFilterable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isBirthDate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   animalTypes?: Prisma.AnimalTypeCharacteristicUpdateManyWithoutCharacteristicNestedInput
   values?: Prisma.AnimalCharacteristicValueUpdateManyWithoutCharacteristicNestedInput
 }
@@ -485,6 +514,7 @@ export type CharacteristicUncheckedUpdateWithoutOptionsInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   dataType?: Prisma.EnumCharacteristicDataTypeFieldUpdateOperationsInput | $Enums.CharacteristicDataType
   isFilterable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isBirthDate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   animalTypes?: Prisma.AnimalTypeCharacteristicUncheckedUpdateManyWithoutCharacteristicNestedInput
   values?: Prisma.AnimalCharacteristicValueUncheckedUpdateManyWithoutCharacteristicNestedInput
 }
@@ -495,6 +525,7 @@ export type CharacteristicCreateWithoutValuesInput = {
   label: string
   dataType?: $Enums.CharacteristicDataType
   isFilterable?: boolean
+  isBirthDate?: boolean
   animalTypes?: Prisma.AnimalTypeCharacteristicCreateNestedManyWithoutCharacteristicInput
   options?: Prisma.CharacteristicOptionCreateNestedManyWithoutCharacteristicInput
 }
@@ -505,6 +536,7 @@ export type CharacteristicUncheckedCreateWithoutValuesInput = {
   label: string
   dataType?: $Enums.CharacteristicDataType
   isFilterable?: boolean
+  isBirthDate?: boolean
   animalTypes?: Prisma.AnimalTypeCharacteristicUncheckedCreateNestedManyWithoutCharacteristicInput
   options?: Prisma.CharacteristicOptionUncheckedCreateNestedManyWithoutCharacteristicInput
 }
@@ -531,6 +563,7 @@ export type CharacteristicUpdateWithoutValuesInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   dataType?: Prisma.EnumCharacteristicDataTypeFieldUpdateOperationsInput | $Enums.CharacteristicDataType
   isFilterable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isBirthDate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   animalTypes?: Prisma.AnimalTypeCharacteristicUpdateManyWithoutCharacteristicNestedInput
   options?: Prisma.CharacteristicOptionUpdateManyWithoutCharacteristicNestedInput
 }
@@ -541,6 +574,7 @@ export type CharacteristicUncheckedUpdateWithoutValuesInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   dataType?: Prisma.EnumCharacteristicDataTypeFieldUpdateOperationsInput | $Enums.CharacteristicDataType
   isFilterable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isBirthDate?: Prisma.BoolFieldUpdateOperationsInput | boolean
   animalTypes?: Prisma.AnimalTypeCharacteristicUncheckedUpdateManyWithoutCharacteristicNestedInput
   options?: Prisma.CharacteristicOptionUncheckedUpdateManyWithoutCharacteristicNestedInput
 }
@@ -600,6 +634,7 @@ export type CharacteristicSelect<ExtArgs extends runtime.Types.Extensions.Intern
   label?: boolean
   dataType?: boolean
   isFilterable?: boolean
+  isBirthDate?: boolean
   animalTypes?: boolean | Prisma.Characteristic$animalTypesArgs<ExtArgs>
   options?: boolean | Prisma.Characteristic$optionsArgs<ExtArgs>
   values?: boolean | Prisma.Characteristic$valuesArgs<ExtArgs>
@@ -612,6 +647,7 @@ export type CharacteristicSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   label?: boolean
   dataType?: boolean
   isFilterable?: boolean
+  isBirthDate?: boolean
 }, ExtArgs["result"]["characteristic"]>
 
 export type CharacteristicSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -620,6 +656,7 @@ export type CharacteristicSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   label?: boolean
   dataType?: boolean
   isFilterable?: boolean
+  isBirthDate?: boolean
 }, ExtArgs["result"]["characteristic"]>
 
 export type CharacteristicSelectScalar = {
@@ -628,9 +665,10 @@ export type CharacteristicSelectScalar = {
   label?: boolean
   dataType?: boolean
   isFilterable?: boolean
+  isBirthDate?: boolean
 }
 
-export type CharacteristicOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "key" | "label" | "dataType" | "isFilterable", ExtArgs["result"]["characteristic"]>
+export type CharacteristicOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "key" | "label" | "dataType" | "isFilterable" | "isBirthDate", ExtArgs["result"]["characteristic"]>
 export type CharacteristicInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   animalTypes?: boolean | Prisma.Characteristic$animalTypesArgs<ExtArgs>
   options?: boolean | Prisma.Characteristic$optionsArgs<ExtArgs>
@@ -653,6 +691,7 @@ export type $CharacteristicPayload<ExtArgs extends runtime.Types.Extensions.Inte
     label: string
     dataType: $Enums.CharacteristicDataType
     isFilterable: boolean
+    isBirthDate: boolean
   }, ExtArgs["result"]["characteristic"]>
   composites: {}
 }
@@ -1084,6 +1123,7 @@ export interface CharacteristicFieldRefs {
   readonly label: Prisma.FieldRef<"Characteristic", 'String'>
   readonly dataType: Prisma.FieldRef<"Characteristic", 'CharacteristicDataType'>
   readonly isFilterable: Prisma.FieldRef<"Characteristic", 'Boolean'>
+  readonly isBirthDate: Prisma.FieldRef<"Characteristic", 'Boolean'>
 }
     
 

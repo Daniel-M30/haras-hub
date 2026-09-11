@@ -1,5 +1,5 @@
-const defaultWhatsappNumber = "5533999999999";
-const defaultWhatsappDisplayPhone = "(33) 99999-9999";
+const defaultWhatsappNumber = "553397087753";
+const defaultWhatsappDisplayPhone = "(33) 99708-7753";
 
 function getWhatsappNumber() {
   return (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? defaultWhatsappNumber).replace(/\D/g, "");
@@ -14,7 +14,7 @@ function createWhatsappUrl(message: string) {
 }
 
 function createDefaultWhatsappMessage() {
-  return "Ola, gostaria de saber mais sobre o Haras Hub.";
+  return "Olá, gostaria de saber mais sobre o Elite da Raça.";
 }
 
 function createAnimalWhatsappMessage(animalName: string, animalIdentifier?: string) {
@@ -22,8 +22,8 @@ function createAnimalWhatsappMessage(animalName: string, animalIdentifier?: stri
   const normalizedIdentifier = animalIdentifier?.trim();
 
   return normalizedIdentifier
-    ? `Ola, gostaria de falar sobre o animal ${normalizedName} (${normalizedIdentifier}).`
-    : `Ola, gostaria de falar sobre o animal ${normalizedName}.`;
+    ? `Olá, gostaria de falar sobre o animal ${normalizedName} (${normalizedIdentifier}).`
+    : `Olá, gostaria de falar sobre o animal ${normalizedName}.`;
 }
 
 function getAnimalReferenceFromPath(pathname: string) {
@@ -36,16 +36,10 @@ function getAnimalReferenceFromPath(pathname: string) {
   const formattedIdentifier = decodeURIComponent(segments[1])
     .split("-")
     .filter(Boolean)
-    .map(segment => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
     .join(" ");
 
   return formattedIdentifier || null;
 }
 
-export {
-  createAnimalWhatsappMessage,
-  createDefaultWhatsappMessage,
-  createWhatsappUrl,
-  getAnimalReferenceFromPath,
-  getWhatsappDisplayPhone,
-};
+export { createAnimalWhatsappMessage, createDefaultWhatsappMessage, createWhatsappUrl, getAnimalReferenceFromPath, getWhatsappDisplayPhone };
